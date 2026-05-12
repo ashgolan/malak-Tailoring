@@ -57,6 +57,10 @@
     @apply bg-gradient-to-r from-purple-700 to-purple-900 text-white text-sm font-semibold;
   }
 
+  .table-header th {
+    @apply whitespace-nowrap;
+  }
+
   .table-row {
     @apply border-b border-gray-100 hover:bg-purple-50 transition-colors duration-150;
   }
@@ -74,7 +78,7 @@
   }
 
   .section-card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden;
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100;
   }
 }
 

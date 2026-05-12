@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCrud } from "../hooks/useCrud";
 import { salesApi, inventoriesApi, taxValuesApi } from "../api";
@@ -21,18 +21,90 @@ const EMPTY = {
 };
 
 const COLUMNS = [
-  { key: "date", label: "תאריך", type: "date", width: "100px" },
-  { key: "clientName", label: "קליינט", width: "120px" },
-  { key: "name", label: "מוצר/עבודה", width: "130px" },
-  { key: "quantity", label: "כמות", type: "number", width: "70px" },
-  { key: "number", label: "מחיר", type: "number", width: "80px" },
-  { key: "discount", label: "הנחה%", type: "number", width: "70px" },
-  { key: "sale", label: "לאחר הנחה", type: "number", width: "90px" },
-  { key: "expenses", label: "הוצאות", type: "number", width: "80px" },
-  { key: "tax", label: "מע״מ", type: "boolean", width: "60px" },
-  { key: "remark", label: "הערה", width: "100px" },
-  { key: "totalAmount", label: "סה״כ", type: "number", width: "90px" },
+  { key: "totalAmount", label: "סה״כ",       type: "number",  width: "9%"  },
+  { key: "remark",      label: "הערה",                        width: "13%" },
+  { key: "expenses",    label: "הוצאות",     type: "number",  width: "7%"  },
+  { key: "discount",    label: "הנחה%",      type: "number",  width: "6%"  },
+  { key: "number",      label: "מחיר",       type: "number",  width: "7%"  },
+  { key: "quantity",    label: "כמות",       type: "number",  width: "5%"  },
+  { key: "name",        label: "מוצר/עבודה",                  width: "14%" },
+  { key: "clientName",  label: "קליינט",                      width: "13%" },
+  { key: "date",        label: "תאריך",      type: "date",    width: "9%"  },
 ];
+
+// Autocomplete component
+function ClientAutocomplete({ value, onChange, allClients }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [showList, setShowList] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setShowList(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleInput = (e) => {
+    const val = e.target.value;
+    onChange(val);
+    if (val.trim().length > 0) {
+      const filtered = allClients.filter((c) =>
+        c.toLowerCase().includes(val.toLowerCase())
+      );
+      setSuggestions(filtered);
+      setShowList(filtered.length > 0);
+    } else {
+      setSuggestions(allClients);
+      setShowList(allClients.length > 0);
+    }
+  };
+
+  const handleFocus = () => {
+    const filtered = value.trim()
+      ? allClients.filter((c) => c.toLowerCase().includes(value.toLowerCase()))
+      : allClients;
+    setSuggestions(filtered);
+    setShowList(filtered.length > 0);
+  };
+
+  const handleSelect = (name) => {
+    onChange(name);
+    setShowList(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <input
+        type="text"
+        value={value}
+        onChange={handleInput}
+        onFocus={handleFocus}
+        className="input-field"
+        placeholder="שם הלקוח"
+        required
+        autoComplete="off"
+      />
+      {showList && (
+        <ul className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+          {suggestions.map((name, i) => (
+            <li
+              key={i}
+              onMouseDown={() => handleSelect(name)}
+              className="px-3 py-2 text-sm hover:bg-purple-50 hover:text-purple-700 cursor-pointer transition-colors"
+            >
+              {name}
+            </li>
+          ))}
+          {suggestions.length === 0 && (
+            <li className="px-3 py-2 text-sm text-gray-400">לא נמצאו תוצאות</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function SalesPage() {
   const { data, isLoading, create, update, remove, toggleColor } = useCrud("sales", salesApi);
@@ -43,19 +115,22 @@ export default function SalesPage() {
 
   const maam = Number(taxValues?.maamValue || 17);
 
+  // Extract unique client names from existing sales
+  const allClients = [...new Set((data || []).map((s) => s.clientName).filter(Boolean))].sort();
+
   const setField = (key, val) => {
     setForm((prev) => {
       const updated = { ...prev, [key]: val };
-      // Recalculate
       const num = Number(updated.number) || 0;
       const disc = Number(updated.discount) || 0;
       const qty = Number(updated.quantity) || 1;
       const exp = Number(updated.expenses) || 0;
+      // סה״כ לפני הוצאות
       const saleVal = num - (num * disc) / 100;
       updated.sale = saleVal;
-      updated.totalAmount = updated.tax
-        ? (saleVal * qty + exp) * (1 + maam / 100)
-        : saleVal * qty + exp;
+      // סה״כ = (מחיר * כמות) - הוצאות
+      const base = saleVal * qty - exp;
+      updated.totalAmount = updated.tax ? base * (1 + maam / 100) : base;
       return updated;
     });
   };
@@ -90,7 +165,11 @@ export default function SalesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">קליינט</label>
-              <input type="text" value={form.clientName} onChange={e => setField("clientName", e.target.value)} className="input-field" placeholder="שם הלקוח" required />
+              <ClientAutocomplete
+                value={form.clientName}
+                onChange={(val) => setField("clientName", val)}
+                allClients={allClients}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">מוצר/עבודה</label>
@@ -120,11 +199,11 @@ export default function SalesPage() {
               <input type="number" value={form.discount} onChange={e => setField("discount", e.target.value)} className="input-field" min="0" max="100" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">לאחר הנחה</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">לאחר הנחה (ליחידה)</label>
               <input type="number" value={form.sale.toFixed(2)} readOnly className="input-field bg-gray-50" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">הוצאות</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">הוצאות (יורדות מהסה״כ)</label>
               <input type="number" value={form.expenses} onChange={e => setField("expenses", e.target.value)} className="input-field" min="0" />
             </div>
             <div>
@@ -137,8 +216,25 @@ export default function SalesPage() {
             </div>
           </div>
 
-          <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-            <div className="flex justify-between items-center">
+          {/* Formula preview */}
+          <div className="bg-purple-50 rounded-xl p-4 border border-purple-100 space-y-1">
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>מחיר × כמות</span>
+              <span>{(Number(form.sale) * Number(form.quantity)).toLocaleString("he-IL", { maximumFractionDigits: 2 })} ₪</span>
+            </div>
+            {Number(form.expenses) > 0 && (
+              <div className="flex justify-between text-xs text-red-500">
+                <span>הוצאות</span>
+                <span>- {Number(form.expenses).toLocaleString("he-IL", { maximumFractionDigits: 2 })} ₪</span>
+              </div>
+            )}
+            {form.tax && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>מע״מ {maam}%</span>
+                <span>+ {(Number(form.totalAmount) - (Number(form.sale) * Number(form.quantity) - Number(form.expenses))).toLocaleString("he-IL", { maximumFractionDigits: 2 })} ₪</span>
+              </div>
+            )}
+            <div className="border-t border-purple-200 pt-2 flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600">סה״כ לתשלום:</span>
               <span className="text-2xl font-bold text-purple-700">
                 {Number(form.totalAmount).toLocaleString("he-IL", { maximumFractionDigits: 2 })} ₪
@@ -155,3 +251,4 @@ export default function SalesPage() {
     </>
   );
 }
+
