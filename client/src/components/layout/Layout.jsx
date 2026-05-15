@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { useTheme } from "../../context/ThemeContext";
 import { usersApi } from "../../api";
 import toast from "react-hot-toast";
 import {
   LayoutDashboard, ShoppingCart, CheckSquare, Users, Truck,
   CreditCard, Building2, Receipt, Scissors, FileText, BarChart3,
   Package, UserCircle, BookOpen, Calendar, Settings, LogOut,
-  Menu, X, ChevronRight, Wallet, Building,
+  Menu, X, ChevronRight, Wallet, Building, Palette,
 } from "lucide-react";
 
 const navItems = [
@@ -33,13 +34,13 @@ const navItems = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showThemes, setShowThemes] = useState(false);
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
+  const { theme, themeName, setTheme, THEMES } = useTheme();
 
   const handleLogout = async () => {
-    try {
-      await usersApi.logout();
-    } catch {}
+    try { await usersApi.logout(); } catch {}
     clearAuth();
     navigate("/login");
     toast.success("התנתקת בהצלחה");
@@ -105,12 +106,39 @@ export default function Layout() {
 
         {/* User & Logout */}
         <div className="p-3 border-t border-white/10">
+          {/* Theme switcher */}
+          <div className="mb-2">
+            <button
+              onClick={() => setShowThemes(!showThemes)}
+              className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <Palette className="w-4 h-4 flex-shrink-0" />
+              {sidebarOpen && <span className="text-sm">ערכת צבעים</span>}
+            </button>
+            {showThemes && sidebarOpen && (
+              <div className="mt-1 p-2 bg-white/10 rounded-lg">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {Object.entries(THEMES).map(([key, t]) => (
+                    <button
+                      key={key}
+                      onClick={() => { setTheme(key); setShowThemes(false); }}
+                      title={t.name}
+                      style={{ background: themeName === key ? t.primary : "transparent", border: `2px solid ${themeName === key ? t.primary : "rgba(255,255,255,0.2)"}` }}
+                      className="flex flex-col items-center gap-1 p-1.5 rounded-lg cursor-pointer transition-all"
+                    >
+                      <span style={{ width: 16, height: 16, borderRadius: "50%", background: t.primary, display: "block" }} />
+                      <span className="text-white/70 text-xs">{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {sidebarOpen && user && (
             <div className="flex items-center gap-2 px-2 py-2 mb-2">
-              <div className="w-8 h-8 rounded-full roshan-gold-bg flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">
-                  {user.email?.[0]?.toUpperCase()}
-                </span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: theme.primary }}>
+                <span className="text-white text-xs font-bold">{user.email?.[0]?.toUpperCase()}</span>
               </div>
               <div className="overflow-hidden">
                 <p className="text-white text-xs font-medium truncate">{user.email}</p>

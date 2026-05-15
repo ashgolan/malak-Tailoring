@@ -13,6 +13,16 @@ const partialPaymentSchema = new Schema({
   advanceAmount: { type: Number, default: "0" },
   colored: { type: Boolean, default: false },
   totalAmount: { type: Number },
+  payments: {
+    type: [
+      {
+        amount: { type: Number, required: true },
+        date: { type: String, default: year + "-" + month + "-" + day },
+        note: { type: String, default: "-" },
+      },
+    ],
+    default: [],
+  },
 });
 
 export const PartialPayment = model("PartialPayment", partialPaymentSchema);

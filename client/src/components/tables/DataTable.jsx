@@ -44,7 +44,7 @@ export default function DataTable({
   const fmt = (n) => Number(n || 0).toLocaleString("he-IL", { maximumFractionDigits: 2 });
 
   const ROW = { display: "flex", flexDirection: "row-reverse", alignItems: "center", width: "100%", borderBottom: "1px solid #f0f0f0" };
-  const CELL = (w, extra = {}) => ({ width: w, minWidth: 0, maxWidth: w, padding: "8px 6px", fontSize: 13, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, flexGrow: w === "auto" ? 1 : 0, flexBasis: w, ...extra });
+  const CELL = (w, extra = {}) => ({ width: w, minWidth: 0, maxWidth: w === "auto" ? undefined : w, padding: "8px 6px", fontSize: 13, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 1, flexGrow: 1, flexBasis: w, ...extra });
   const HEAD = (w) => ({ ...CELL(w), fontWeight: 700, color: "#4c1d95", background: "transparent", border: "none", borderBottom: "2px solid #7c3aed", cursor: "pointer", textAlign: "right", direction: "rtl" });
 
   if (loading) return (
