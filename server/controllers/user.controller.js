@@ -92,10 +92,22 @@ export const userControllers = {
   refreshToken: async (req, res) => {
     try {
       const decoded = jwt.verify(req.body.refreshToken, process.env.ACCESS_TOKEN_SECRET);
+
       const user = await User.findById(decoded._id);
       if (!user) throw Error("User not found");
+
+      // امسح التوكن القديم أولاً
+      user.tokens = user.tokens.filter(
+        (t) => t.refreshToken !== req.body.refreshToken
+      );
+
+      // احفظ قبل ما تولد توكن جديد
+      await user.save();
+
+      // الآن ولّد توكن جديد
       const tokens = await user.generateAuthToken();
       res.status(200).send(tokens);
+
     } catch (e) {
       res.status(401).send(e.message);
     }

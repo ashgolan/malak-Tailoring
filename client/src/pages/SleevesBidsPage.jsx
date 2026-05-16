@@ -39,7 +39,7 @@ const COLS = [
   },
   {
     "key": "number",
-    "label": "סכום",
+    "label": "מחיר",
     "type": "number",
     "width": "15%"
   },
@@ -98,7 +98,7 @@ export default function SleevesBidsPage() {
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:44, height:44, borderRadius:12, background:theme.gradient, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, boxShadow:`0 4px 12px ${theme.primary}30` }}>✂️</div>
           <div>
-            <h1 style={{ fontSize:22, fontWeight:700, color:"#1f2937", margin:0 }}>הצעות שוואדר</h1>
+            <h1 style={{ fontSize:22, fontWeight:700, color:"#1f2937", margin:0 }}>שרוולים</h1>
             <p style={{ fontSize:13, color:"#9ca3af", margin:"3px 0 0" }}>{filtered.length} רשומות &nbsp;|&nbsp; סה״כ: <strong style={{ color:theme.primary }}>{fmt(total)} ₪</strong></p>
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function SleevesBidsPage() {
                 onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
             <div>
-              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>סכום ליחידה</label>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>מחיר ליחידה</label>
               <input type="number" value={form.number} onChange={e => setForm(p => ({...p, number: e.target.value}))} min="0" required={false}
                 style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
                 onFocus={e => fo(e, theme.accent)} onBlur={bl} />

@@ -48,15 +48,16 @@ function ClientAutocomplete({ value, onChange, allClients, accent }) {
 }
 
 const COLS = [
-  { key: "totalAmount", label: "סה״כ",      type: "number",  width: "8%"  },
-  { key: "remark",      label: "הערה",                        width: "13%" },
-  { key: "expenses",    label: "הוצאות",     type: "number",  width: "7%"  },
-  { key: "discount",    label: "הנחה%",      type: "number",  width: "6%"  },
-  { key: "number",      label: "מחיר",       type: "number",  width: "6%"  },
-  { key: "quantity",    label: "כמות",       type: "number",  width: "5%"  },
-  { key: "name",        label: "מוצר/עבודה",                  width: "17%" },
-  { key: "clientName",  label: "קליינט",                      width: "15%" },
-  { key: "date",        label: "תאריך",      type: "date",    width: "9%"  },
+  { key: "totalAmount", label: "סה״כ",        type: "number",  width: "8%"  },
+  { key: "tax",         label: "מע״מ",         type: "boolean", width: "5%"  },
+  { key: "expenses",    label: "הוצאות",       type: "number",  width: "7%"  },
+  { key: "sale",        label: "מחיר נטו",     type: "number",  width: "8%"  },
+  { key: "discount",    label: "הנחה%",        type: "number",  width: "6%"  },
+  { key: "number",      label: "מחיר",         type: "number",  width: "6%"  },
+  { key: "quantity",    label: 'כ.מ"ר',        type: "number",  width: "5%"  },
+  { key: "name",        label: "עבודה",                         width: "14%" },
+  { key: "clientName",  label: "קליינט",                        width: "13%" },
+  { key: "date",        label: "תאריך",        type: "date",    width: "9%"  },
 ];
 
 export default function SalesPage() {
@@ -213,12 +214,21 @@ export default function SalesPage() {
               {COLS.map(col => (
                 <div key={col.key} style={{ ...CELL(col.width), color: item.colored ? "#991b1b" : "#374151" }}>
                   {isEditing ? (
-                    <input type={col.type === "number" ? "number" : "text"} value={editVals[col.key] ?? ""}
-                      onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))}
-                      style={{ width:"100%", border:`1px solid ${theme.accent}`, borderRadius:6, padding:"2px 6px", fontSize:12, outline:"none", fontFamily:"inherit" }} />
+                    col.type === "boolean" ? (
+                      <div onClick={() => setEditVals(v => ({...v, [col.key]: !v[col.key]}))}
+                        style={{ position:"relative", width:36, height:20, cursor:"pointer" }}>
+                        <div style={{ position:"absolute", inset:0, borderRadius:20, background: editVals[col.key] ? theme.primary : "#d1d5db", transition:"0.2s" }}>
+                          <div style={{ position:"absolute", top:2, right: editVals[col.key] ? 2 : 18, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <input type={col.type === "number" ? "number" : "text"} value={editVals[col.key] ?? ""}
+                        onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))}
+                        style={{ width:"100%", border:`1px solid ${theme.accent}`, borderRadius:6, padding:"2px 6px", fontSize:12, outline:"none", fontFamily:"inherit" }} />
+                    )
                   ) : (
-                    col.type === "number" ? fmt(item[col.key])
-                    : col.type === "boolean" ? (item[col.key] ? "✓" : "-")
+                    col.type === "boolean" ? (item[col.key] ? <span style={{ color:"#16a34a", fontWeight:600, fontSize:11 }}>✓ מע״מ</span> : <span style={{ color:"#9ca3af", fontSize:11 }}>ללא</span>)
+                    : col.type === "number" ? fmt(item[col.key])
                     : (item[col.key] || "-")
                   )}
                 </div>
@@ -257,7 +267,7 @@ export default function SalesPage() {
               <ClientAutocomplete value={form.clientName} onChange={v => setField("clientName", v)} allClients={allClients} accent={theme.accent} />
             </div>
             <div>
-              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>מוצר/עבודה</label>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>עבודה</label>
               {inventories?.length ? (
                 <select value={form.name} onChange={e => { const inv = inventories.find(i => i.name === e.target.value); setField("name", e.target.value); if (inv) setField("number", inv.number); }}
                   style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", background:"#fff", boxSizing:"border-box", fontFamily:"inherit" }} required>
@@ -270,7 +280,7 @@ export default function SalesPage() {
               )}
             </div>
             <div>
-              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>כמות</label>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>כ.מ"ר</label>
               <input type="number" value={form.quantity} min="1" onChange={e => setField("quantity", e.target.value)}
                 style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
                 onFocus={e => fo(e, theme.accent)} onBlur={bl} />
@@ -313,7 +323,7 @@ export default function SalesPage() {
           {/* Total preview */}
           <div style={{ background:theme.primaryLight, border:`1px solid ${theme.primaryBorder}`, borderRadius:12, padding:"14px 18px" }}>
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#6b7280", marginBottom:4 }}>
-              <span>מחיר × כמות</span><span>{fmt(form.sale * form.quantity)} ₪</span>
+              <span>מחיר × כ.מ"ר</span><span>{fmt(form.sale * form.quantity)} ₪</span>
             </div>
             {Number(form.expenses) > 0 && (
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#ef4444", marginBottom:4 }}>

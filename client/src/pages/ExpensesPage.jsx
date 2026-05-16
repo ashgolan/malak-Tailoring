@@ -156,10 +156,18 @@ export default function ExpensesPage() {
               {COLS.map(col => (
                 <div key={col.key} style={{ ...CELL(col.width), color: item.colored ? "#991b1b" : "#374151" }}>
                   {isEditing ? (
-                    col.type === "boolean" ? <input type="checkbox" checked={!!editVals[col.key]} onChange={e => setEditVals(v=>({...v,[col.key]:e.target.checked}))} />
-                    : <input type={col.type==="number"?"number":"text"} value={editVals[col.key]??""} onChange={e => setEditVals(v=>({...v,[col.key]:e.target.value}))} style={{ width:"100%", border:`1px solid ${theme.accent}`, borderRadius:6, padding:"2px 6px", fontSize:12, outline:"none", fontFamily:"inherit" }} />
+                    col.type === "boolean" ? (
+                      <div onClick={() => setEditVals(v => ({...v, [col.key]: !v[col.key]}))}
+                        style={{ position:"relative", width:36, height:20, cursor:"pointer" }}>
+                        <div style={{ position:"absolute", inset:0, borderRadius:20, background: editVals[col.key] ? theme.primary : "#d1d5db", transition:"0.2s" }}>
+                          <div style={{ position:"absolute", top:2, right: editVals[col.key] ? 2 : 18, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"0.2s", boxShadow:"0 1px 3px rgba(0,0,0,0.2)" }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <input type={col.type==="number"?"number":"text"} value={editVals[col.key]??""} onChange={e => setEditVals(v=>({...v,[col.key]:e.target.value}))} style={{ width:"100%", border:`1px solid ${theme.accent}`, borderRadius:6, padding:"2px 6px", fontSize:12, outline:"none", fontFamily:"inherit" }} />
+                    )
                   ) : (
-                    col.type==="boolean" ? (item[col.key]?"✓":"-") : col.type==="number" ? fmt(item[col.key]) : (item[col.key]||"-")
+                    col.type==="boolean" ? (item[col.key] ? <span style={{ color:"#16a34a", fontWeight:600, fontSize:11 }}>✓ מע״מ</span> : <span style={{ color:"#9ca3af", fontSize:11 }}>ללא</span>) : col.type==="number" ? fmt(item[col.key]) : (item[col.key]||"-")
                   )}
                 </div>
               ))}

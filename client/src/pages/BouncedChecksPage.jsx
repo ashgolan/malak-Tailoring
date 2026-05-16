@@ -25,67 +25,17 @@ const fo = (e, color) => { e.target.style.borderColor = color; };
 const bl = (e) => { e.target.style.borderColor = "#e5e7eb"; };
 
 const COLS = [
-  {
-    "key": "totalAmount",
-    "label": "סה״כ",
-    "type": "number",
-    "width": "8%"
-  },
-  {
-    "key": "remark",
-    "label": "הערה",
-    "width": "10%"
-  },
-  {
-    "key": "paymentDate",
-    "label": "ת.תשלום",
-    "width": "10%"
-  },
-  {
-    "key": "taxNumber",
-    "label": "מס' חשבונית",
-    "width": "9%"
-  },
-  {
-    "key": "accountNumber",
-    "label": "חשבון",
-    "type": "number",
-    "width": "8%"
-  },
-  {
-    "key": "branchNumber",
-    "label": "סניף",
-    "type": "number",
-    "width": "6%"
-  },
-  {
-    "key": "bankNumber",
-    "label": "בנק",
-    "type": "number",
-    "width": "5%"
-  },
-  {
-    "key": "checkNumber",
-    "label": "מס' שיק",
-    "type": "number",
-    "width": "8%"
-  },
-  {
-    "key": "number",
-    "label": "סכום",
-    "type": "number",
-    "width": "8%"
-  },
-  {
-    "key": "clientName",
-    "label": "קליינט",
-    "width": "14%"
-  },
-  {
-    "key": "date",
-    "label": "תאריך",
-    "width": "9%"
-  }
+  { key: "totalAmount",   label: "סה״כ",         type: "money", width: "8%"  },
+  { key: "remark",        label: "הערה",                        width: "10%" },
+  { key: "number",        label: "סכום",         type: "money", width: "8%"  },
+  { key: "paymentDate",   label: "ת.פירעון",                    width: "10%" },
+  { key: "accountNumber", label: "חשבון",        type: "id",    width: "8%"  },
+  { key: "branchNumber",  label: "סניף",         type: "id",    width: "6%"  },
+  { key: "bankNumber",    label: "בנק",          type: "id",    width: "5%"  },
+  { key: "checkNumber",   label: "מס' שיק",      type: "id",    width: "8%"  },
+  { key: "taxNumber",     label: "מס' חשבונית",                 width: "9%"  },
+  { key: "clientName",    label: "קליינט",                      width: "14%" },
+  { key: "date",          label: "תאריך",                       width: "9%"  },
 ];
 
 export default function BouncedChecksPage() {
@@ -110,11 +60,12 @@ export default function BouncedChecksPage() {
     })
     .sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
+  // totalAmount = number (same field)
+  const total = filtered.reduce((s, i) => s + (Number(i.number) || 0), 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const finalForm = { ...form };
+    const finalForm = { ...form, totalAmount: Number(form.number) };
     create(finalForm);
     setModal(false); setForm(EMPTY);
   };
@@ -131,7 +82,7 @@ export default function BouncedChecksPage() {
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:44, height:44, borderRadius:12, background:theme.gradient, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, boxShadow:`0 4px 12px ${theme.primary}30` }}>✅</div>
           <div>
-            <h1 style={{ fontSize:22, fontWeight:700, color:"#1f2937", margin:0 }}>שיקים חוזרים</h1>
+            <h1 style={{ fontSize:22, fontWeight:700, color:"#1f2937", margin:0 }}>שיקים דחויים</h1>
             <p style={{ fontSize:13, color:"#9ca3af", margin:"3px 0 0" }}>{filtered.length} רשומות &nbsp;|&nbsp; סה״כ: <strong style={{ color:theme.primary }}>{fmt(total)} ₪</strong></p>
           </div>
         </div>
@@ -175,7 +126,7 @@ export default function BouncedChecksPage() {
               onMouseLeave={e => { e.currentTarget.style.background=bg; }}>
               <div style={{ width:70, minWidth:70, padding:"10px 8px", display:"flex", gap:4, justifyContent:"center", flexShrink:0 }}>
                 {isEditing ? (
-                  <><button onClick={() => { update(editId, editVals); setEditId(null); }} style={{ padding:"3px 8px", background:"#dcfce7", border:"none", borderRadius:6, color:"#16a34a", cursor:"pointer", fontSize:12 }}>✓</button><button onClick={() => setEditId(null)} style={{ padding:"3px 8px", background:"#f3f4f6", border:"none", borderRadius:6, color:"#6b7280", cursor:"pointer", fontSize:12 }}>✕</button></>
+                  <><button onClick={() => { update(editId, { ...editVals, totalAmount: Number(editVals.number) }); setEditId(null); }} style={{ padding:"3px 8px", background:"#dcfce7", border:"none", borderRadius:6, color:"#16a34a", cursor:"pointer", fontSize:12 }}>✓</button><button onClick={() => setEditId(null)} style={{ padding:"3px 8px", background:"#f3f4f6", border:"none", borderRadius:6, color:"#6b7280", cursor:"pointer", fontSize:12 }}>✕</button></>
                 ) : (
                   <><button onClick={() => { setEditId(item._id); setEditVals({...item}); }} style={{ padding:"3px 8px", background:"#eff6ff", border:"none", borderRadius:6, color:"#3b82f6", cursor:"pointer", fontSize:12 }}>✎</button><button onClick={() => { if(window.confirm("למחוק?")) remove(item._id); }} style={{ padding:"3px 8px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12 }}>🗑</button></>
                 )}
@@ -183,10 +134,9 @@ export default function BouncedChecksPage() {
               {COLS.map(col => (
                 <div key={col.key} style={{ ...CELL(col.width), color: item.colored ? "#991b1b" : "#374151" }}>
                   {isEditing ? (
-                    col.type === "boolean" ? <input type="checkbox" checked={!!editVals[col.key]} onChange={e => setEditVals(v=>({...v,[col.key]:e.target.checked}))} />
-                    : <input type={col.type==="number"?"number":"text"} value={editVals[col.key]??""} onChange={e => setEditVals(v=>({...v,[col.key]:e.target.value}))} style={{ width:"100%", border:`1px solid ${theme.accent}`, borderRadius:6, padding:"2px 6px", fontSize:12, outline:"none", fontFamily:"inherit" }} />
+                    <input type="text" value={editVals[col.key]??""} onChange={e => setEditVals(v=>({...v,[col.key]:e.target.value}))} style={{ width:"100%", border:`1px solid ${theme.accent}`, borderRadius:6, padding:"2px 6px", fontSize:12, outline:"none", fontFamily:"inherit" }} />
                   ) : (
-                    col.type==="boolean" ? (item[col.key]?"✓":"-") : col.type==="number" ? fmt(item[col.key]) : (item[col.key]||"-")
+                    col.type==="money" ? fmt(item[col.key]) : (item[col.key]||"-")
                   )}
                 </div>
               ))}

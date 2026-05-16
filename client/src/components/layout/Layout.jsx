@@ -14,9 +14,9 @@ import {
 const navItems = [
   { path: "/", label: "לוח בקרה", icon: LayoutDashboard, exact: true },
   { path: "/sales", label: "מכירות", icon: ShoppingCart },
-  { path: "/sleeves-bids", label: "הצעות שוואדר", icon: Scissors },
+  { path: "/sleeves-bids", label: "שרוולים", icon: Scissors },
   { path: "/bids", label: "הצעות מחיר", icon: FileText },
-  { path: "/bounced-checks", label: "שיקים חוזרים", icon: CheckSquare },
+  { path: "/bounced-checks", label: "שיקים דחויים", icon: CheckSquare },
   { path: "/workers-expenses", label: "הוצאות עובדים", icon: Users },
   { path: "/waybills", label: "תעודות משלוח", icon: Truck },
   { path: "/partial-payment", label: "תשלום חלקי", icon: CreditCard },
