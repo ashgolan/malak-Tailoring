@@ -20,15 +20,13 @@ const navItems = [
   { path: "/workers-expenses", label: "הוצאות עובדים", icon: Users },
   { path: "/waybills", label: "תעודות משלוח", icon: Truck },
   { path: "/partial-payment", label: "תשלום חלקי", icon: CreditCard },
-  { path: "/institution-tax", label: "מס מוסדות", icon: Building2 },
+  { path: "/institution-tax", label: "חשבוניות למוסדות", icon: Building2 },
   { path: "/sales-to-companies", label: "מכירות לחברות", icon: Building },
   { path: "/expenses", label: "הוצאות", icon: Wallet },
-  { path: "/companies", label: "חברות", icon: Building2 },
   { path: "/inventories", label: "מלאי", icon: Package },
   { path: "/providers", label: "ספקים", icon: UserCircle },
   { path: "/contacts", label: "אנשי קשר", icon: BookOpen },
-  { path: "/events", label: "אירועים", icon: Calendar },
-  { path: "/charts", label: "דוחות וגרפים", icon: BarChart3 },
+  { path: "/charts", label: "דוחות", icon: BarChart3 },
   { path: "/settings", label: "הגדרות", icon: Settings },
 ];
 

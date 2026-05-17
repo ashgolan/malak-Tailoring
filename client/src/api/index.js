@@ -67,8 +67,15 @@ export const contactsApi = createApiService("contacts");
 export const eventsApi = createApiService("events");
 
 export const taxValuesApi = {
-  get: () => api.get("/taxValues"),
-  upsert: (data) => api.post("/taxValues", data),
+  get: () => settingsApi.get(),
+  upsert: (data) => settingsApi.update(data),
+};
+
+export const settingsApi = {
+  get: () => api.get("/settings"),
+  update: (data) => api.put("/settings", data),
+  updateSecurity: (data) => api.put("/settings/security", data),
+  backup: () => api.get("/settings/backup"),
 };
 
 export const usersApi = {

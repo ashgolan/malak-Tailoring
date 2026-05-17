@@ -137,16 +137,28 @@ function BidModal({ initial, onClose, onSave, loading, inventories, maam }) {
               <div key={i} style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
                 <div style={{ width:"40%", flexBasis:"40%" }}>
                   {inventories?.length ? (
-                    <select style={s.select} value={row.description} onChange={e => selectInventory(i, e.target.value)}>
-                      <option value="">בחר / הזן</option>
-                      {inventories.map(inv => <option key={inv._id} value={inv.name}>{inv.name}</option>)}
-                    </select>
+                    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                      <select style={s.select} value={inventories.find(x=>x.name===row.description) ? row.description : "__free__"}
+                        onChange={e => {
+                          if (e.target.value === "__free__") {
+                            updateItem(i, "description", "");
+                          } else {
+                            selectInventory(i, e.target.value);
+                          }
+                        }}>
+                        <option value="__free__">✏️ הזנה חופשית</option>
+                        {inventories.map(inv => <option key={inv._id} value={inv.name}>{inv.name}</option>)}
+                      </select>
+                      {(!inventories.find(x=>x.name===row.description) || row.description === "") && (
+                        <input style={{ ...s.input, fontSize:12 }}
+                          value={row.description}
+                          placeholder="הזן תיאור חופשי..."
+                          onChange={e => updateItem(i, "description", e.target.value)}
+                          onFocus={fo} onBlur={bl} />
+                      )}
+                    </div>
                   ) : (
                     <input style={s.input} value={row.description} onChange={e => updateItem(i, "description", e.target.value)} placeholder="תיאור" onFocus={fo} onBlur={bl} />
-                  )}
-                  {inventories?.length && (
-                    <input style={{ ...s.input, marginTop:4, fontSize:12 }} value={row.description === (inventories.find(x=>x.name===row.description)?.name||row.description) ? "" : row.description}
-                      placeholder="או הזן תיאור חופשי..." onChange={e => updateItem(i, "description", e.target.value)} onFocus={fo} onBlur={bl} />
                   )}
                 </div>
                 <div style={{ width:"18%", flexBasis:"18%" }}>

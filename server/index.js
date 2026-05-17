@@ -21,6 +21,9 @@ import { providersRouter } from "./routes/providers.routes.js";
 import { contactsRouter } from "./routes/contacts.routes.js";
 import { taxValuesRouter } from "./routes/taxValues.routes.js";
 import { eventsRouter } from "./routes/events.routes.js";
+import { settingsRouter } from "./routes/settings.routes.js";
+import { restoreRouter } from "./routes/restore.routes.js";
+import { startBackupScheduler } from "./services/backupScheduler.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,12 +49,17 @@ app.use("/api/providers", providersRouter);
 app.use("/api/contacts", contactsRouter);
 app.use("/api/taxValues", taxValuesRouter);
 app.use("/api/events", eventsRouter);
+app.use("/api/settings", settingsRouter);
+app.use("/api/emergency", restoreRouter);
 
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB - roshan-db");
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      startBackupScheduler();
+    });
   })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
