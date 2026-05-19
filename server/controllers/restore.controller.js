@@ -15,19 +15,19 @@ import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 
 const COLLECTIONS = {
-  sales:            Sale,
-  bouncedChecks:    BouncedCheck,
-  workersExpenses:  WorkerExpenses,
-  waybills:         Waybill,
-  partialPayments:  PartialPayment,
+  sales: Sale,
+  bouncedChecks: BouncedCheck,
+  workersExpenses: WorkerExpenses,
+  waybills: Waybill,
+  partialPayments: PartialPayment,
   institutionTaxes: InstitutionTax,
   salesToCompanies: SaleToCompany,
-  expenses:         Expense,
-  sleevesBids:      SleevesBid,
-  bids:             Bid,
-  inventories:      Inventory,
-  providers:        Provider,
-  contacts:         Contact,
+  expenses: Expense,
+  sleevesBids: SleevesBid,
+  bids: Bid,
+  inventories: Inventory,
+  providers: Provider,
+  contacts: Contact,
 };
 
 // Restore from backup JSON - requires emergency key
@@ -51,7 +51,7 @@ export const restoreBackup = async (req, res) => {
       if (data[key] && Array.isArray(data[key])) {
         const docs = data[key].map(({ _id, __v, ...rest }) => rest);
         if (docs.length > 0) {
-          await Model.insertMany(docs, { ordered: false }).catch(() => {});
+          await Model.insertMany(docs, { ordered: false }).catch(() => { });
           results[key] = docs.length;
         }
       }
@@ -59,7 +59,7 @@ export const restoreBackup = async (req, res) => {
 
     // Restore users with temp password (since password was excluded from backup)
     if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-      const tempHash = bcrypt.hashSync("Roshan2025", 10);
+      const tempHash = bcrypt.hashSync(process.env.RESTORE_TEMP_PASSWORD, 10);
       let usersRestored = 0;
       for (const user of data.users) {
         const { _id, __v, password, ...userData } = user;

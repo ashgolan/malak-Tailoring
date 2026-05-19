@@ -23,7 +23,8 @@ export const userControllers = {
 
   getAllUsers: async (req, res) => {
     try {
-      const users = await User.find();
+      // ✅ كان: User.find() — يُعيد كل شيء بما فيه password وtokens
+      const users = await User.find().select("-password -tokens -key");
       res.status(200).send(users);
     } catch (e) {
       res.status(400).send(e.message);
@@ -91,25 +92,20 @@ export const userControllers = {
 
   refreshToken: async (req, res) => {
     try {
-      const decoded = jwt.verify(req.body.refreshToken, process.env.ACCESS_TOKEN_SECRET);
+      // ✅ يستخدم REFRESH_TOKEN_SECRET المنفصل
+      const decoded = jwt.verify(
+        req.body.refreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+      );
 
       const user = await User.findById(decoded._id);
       if (!user) throw Error("User not found");
+      if (user.isBlocked) throw Error("User is blocked");
 
-      // امسح التوكن القديم أولاً
-      user.tokens = user.tokens.filter(
-        (t) => t.refreshToken !== req.body.refreshToken
-      );
-
-      // احفظ قبل ما تولد توكن جديد
-      await user.save();
-
-      // الآن ولّد توكن جديد
       const tokens = await user.generateAuthToken();
       res.status(200).send(tokens);
-
     } catch (e) {
-      res.status(401).send(e.message);
+      res.status(401).send({ error: "Invalid refresh token" });
     }
   },
 };

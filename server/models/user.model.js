@@ -14,35 +14,43 @@ const userSchema = new Schema({
   key: { type: String, default: "unknown" },
   tokens: [
     {
-      accessToken: {
-        type: String,
-        required: true,
-      },
+      accessToken: { type: String, required: true },
     },
   ],
   role: { type: String, required: true },
 });
 
+// ✅ دالة واحدة فقط — بعد التعديلات الأمنية
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
+
   const accessToken = jwt.sign(
     { _id: user._id.toString() },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "300min" }
+    { expiresIn: "15min" }
   );
+
   const refreshToken = jwt.sign(
     { _id: user._id.toString() },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: "940min" }
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: "7d" }
   );
+
   user.tokens = user.tokens.concat({ accessToken });
   if (user.tokens.length > 10) {
     user.tokens = user.tokens.slice(-10);
   }
-  user.save().catch((err) => {
-    console.error("Failed to save user tokens:", err);
-  });
+  await user.save();
   return { accessToken, refreshToken, user };
+};
+
+// ✅ يمنع إرسال password وtokens في أي response تلقائياً
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.tokens;
+  delete user.key;
+  return user;
 };
 
 export const User = new model("User", userSchema);

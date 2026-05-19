@@ -1,9 +1,11 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import helmet from "helmet";           // ← جديد
 import dotenv from "dotenv";
 dotenv.config();
 
+import { apiLimiter } from "./middleware/rateLimiter.js"; // من الخطوة 2
 import { userRouter } from "./routes/user.routes.js";
 import { salesRouter } from "./routes/sales.routes.js";
 import { bouncedChecksRouter } from "./routes/bouncedChecks.routes.js";
@@ -28,8 +30,29 @@ import { startBackupScheduler } from "./services/backupScheduler.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "*" }));
-app.use(express.json());
+// ✅ Helmet — 11 header أمني تلقائياً
+app.use(helmet());
+
+// ✅ CORS محدد — بدل "*"
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || "")
+  .split(",")
+  .map(o => o.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // السماح لطلبات بدون origin (Postman، mobile apps)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin غير مسموح به — ${origin}`));
+  },
+  credentials: true,
+}));
+
+app.use(express.json({ limit: "2mb" })); // ✅ حد حجم الـ body
+
+// ✅ Rate limiting من الخطوة 2
+app.use("/api", apiLimiter);
 
 // Routes
 app.use("/api/users", userRouter);
@@ -51,6 +74,15 @@ app.use("/api/taxValues", taxValuesRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/emergency", restoreRouter);
+
+// ✅ Global error handler — لا يكشف stack traces للمستخدم
+app.use((err, req, res, next) => {
+  const status = err.status || 500;
+  const message = process.env.NODE_ENV === "production"
+    ? "حدث خطأ في السيرفر"
+    : err.message;
+  res.status(status).json({ error: message });
+});
 
 // Connect to MongoDB
 mongoose
