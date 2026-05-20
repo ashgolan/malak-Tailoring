@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/sleevesBids.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { SleevesBid } from "../models/sleevesBid.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(SleevesBid);
 export const sleevesBidsRouter = Router();
-
 sleevesBidsRouter.get("/", auth, getAll);
 sleevesBidsRouter.get("/:id", auth, getOne);
 sleevesBidsRouter.post("/", auth, create);

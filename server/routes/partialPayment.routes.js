@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/partialPayment.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { PartialPayment } from "../models/partialPayment.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(PartialPayment);
 export const partialPaymentRouter = Router();
-
 partialPaymentRouter.get("/", auth, getAll);
 partialPaymentRouter.get("/:id", auth, getOne);
 partialPaymentRouter.post("/", auth, create);

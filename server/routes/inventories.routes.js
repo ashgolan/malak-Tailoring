@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/inventories.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { Inventory } from "../models/inventory.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(Inventory);
 export const inventoriesRouter = Router();
-
 inventoriesRouter.get("/", auth, getAll);
 inventoriesRouter.get("/:id", auth, getOne);
 inventoriesRouter.post("/", auth, create);

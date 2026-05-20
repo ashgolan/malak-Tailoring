@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/institutionTax.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { InstitutionTax } from "../models/institutionTax.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(InstitutionTax);
 export const institutionTaxRouter = Router();
-
 institutionTaxRouter.get("/", auth, getAll);
 institutionTaxRouter.get("/:id", auth, getOne);
 institutionTaxRouter.post("/", auth, create);

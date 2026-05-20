@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/events.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { Event } from "../models/event.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(Event);
 export const eventsRouter = Router();
-
 eventsRouter.get("/", auth, getAll);
 eventsRouter.get("/:id", auth, getOne);
 eventsRouter.post("/", auth, create);

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/providers.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { Provider } from "../models/provider.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(Provider);
 export const providersRouter = Router();
-
 providersRouter.get("/", auth, getAll);
 providersRouter.get("/:id", auth, getOne);
 providersRouter.post("/", auth, create);

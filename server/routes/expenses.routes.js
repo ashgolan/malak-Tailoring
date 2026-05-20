@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getAll, getOne, create, update, remove } from "../controllers/expenses.controller.js";
+import { createCrudController } from "../controllers/crudController.js";
+import { Expense } from "../models/expenses.model.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+const { getAll, getOne, create, update, remove } = createCrudController(Expense);
 export const expensesRouter = Router();
-
 expensesRouter.get("/", auth, getAll);
 expensesRouter.get("/:id", auth, getOne);
 expensesRouter.post("/", auth, create);
