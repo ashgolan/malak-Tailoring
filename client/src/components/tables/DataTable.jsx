@@ -87,7 +87,7 @@ export default function DataTable({
         style={{ width: "100%", padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
 
       {/* Table */}
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
 
         {/* Header row */}
         <div style={{ ...ROW, background: "#faf5ff", borderBottom: "2px solid #ede9fe", padding: "4px 0" }}>
