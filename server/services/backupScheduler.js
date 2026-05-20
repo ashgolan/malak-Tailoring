@@ -88,17 +88,28 @@ export const sendBackupEmail = async () => {
             <h4 style="margin:0 0 10px;color:#065f46;">פירוט לפי קטגוריה:</h4>
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
               ${Object.entries(backupData.data).map(([key, arr]) => {
-                const labels = {
-                  sales:"מכירות", bouncedChecks:"שיקים דחויים", workersExpenses:"הוצאות עובדים",
-                  waybills:"תעודות משלוח", partialPayments:"תשלום חלקי", institutionTaxes:"חשבוניות למוסדות",
-                  salesToCompanies:"מכירות לחברות", expenses:"הוצאות", sleevesBids:"שרוולים",
-                  bids:"הצעות מחיר", inventories:"מלאי", providers:"ספקים", contacts:"אנשי קשר"
-                };
-                return `<tr>
+        const labels = {
+          sales: "מכירות",
+          bouncedChecks: "שיקים דחויים",
+          workersExpenses: "הוצאות עובדים",
+          waybills: "תעודות משלוח",
+          partialPayments: "תשלום חלקי",
+          institutionTaxes: "חשבוניות למוסדות",
+          salesToCompanies: "מכירות לחברות",
+          expenses: "הוצאות",
+          sleevesBids: "שרוולים",
+          bids: "הצעות מחיר",
+          inventories: "מלאי",
+          providers: "ספקים",
+          contacts: "אנשי קשר",
+          users: "משתמשים",     
+          settings: "הגדרות",
+        };
+        return `<tr>
                   <td style="padding:4px 0;color:#374151;">${labels[key] || key}</td>
                   <td style="text-align:left;font-weight:600;color:#059669;">${arr.length} רשומות</td>
                 </tr>`;
-              }).join("")}
+      }).join("")}
             </table>
           </div>
 
