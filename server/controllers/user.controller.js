@@ -12,7 +12,7 @@ export const userControllers = {
         const hash = bcrypt.hashSync(req.body.password, salt);
         const user = await User.create({ ...req.body, password: hash, key: "unknown" });
         if (!user) throw Error("שגיאה בהוספת הנתונים");
-        res.status(200).send(user);
+        res.status(200).send(user.toJSON()); // ✅ كان: res.status(200).send(user)
       } else {
         throw Error("שגיאה בהוספת הנתונים");
       }
