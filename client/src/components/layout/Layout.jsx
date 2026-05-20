@@ -49,7 +49,7 @@ function useIsMobile() {
 }
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [showThemes, setShowThemes] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
