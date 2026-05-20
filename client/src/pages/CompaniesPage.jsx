@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { companiesApi } from "../api";
 import Modal from "../components/ui/Modal";
+import ConfirmModal from "../components/ui/ConfirmModal";
 import toast from "react-hot-toast";
 import { Plus, Trash2, Edit2, ChevronDown, ChevronUp, Building, Building2 } from "lucide-react";
 
@@ -11,6 +12,7 @@ export default function CompaniesPage() {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ name: "", isInstitution: false, taskDescription: "" });
   const [expanded, setExpanded] = useState({});
+  const [confirmId, setConfirmId] = useState(null);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["companies"] });
 
@@ -40,7 +42,7 @@ export default function CompaniesPage() {
                 <span className="font-medium text-gray-700">{c.name}</span>
                 <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{c.tasks?.length || 0} משימות</span>
               </button>
-              <button onClick={() => { if (window.confirm("למחוק?")) deleteMut.mutate(c._id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg">
+              <button onClick={() => {  setConfirmId(c._id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

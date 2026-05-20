@@ -1,3 +1,4 @@
+import ConfirmModal from "../ui/ConfirmModal";
 import { useState, useMemo } from "react";
 
 export default function DataTable({
@@ -9,6 +10,7 @@ export default function DataTable({
   const [sortDir, setSortDir] = useState("desc");
   const [showAll, setShowAll] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
   const [editValues, setEditValues] = useState({});
   const currentYear = new Date().getFullYear();
 
@@ -121,7 +123,7 @@ export default function DataTable({
                 ) : (
                   <>
                     {onEdit && <button onClick={() => startEdit(item)} style={{ padding: "3px 8px", background: "#eff6ff", border: "none", borderRadius: 6, color: "#3b82f6", cursor: "pointer", fontSize: 12 }}>✎</button>}
-                    {onDelete && <button onClick={() => { if (window.confirm("למחוק?")) onDelete(item._id); }} style={{ padding: "3px 8px", background: "#fef2f2", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", fontSize: 12 }}>🗑</button>}
+                    {onDelete && <button onClick={() => setConfirmId(item._id)} style={{ padding: "3px 8px", background: "#fef2f2", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", fontSize: 12 }}>🗑</button>}
                   </>
                 )}
               </div>
