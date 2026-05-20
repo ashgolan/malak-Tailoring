@@ -60,22 +60,21 @@ export const userControllers = {
     }
   },
 
-  login: async (req, res) => {
-    try {
-      // ✅ جلب مباشر من MongoDB بدون toJSON
-      const user = await User.collection.findOne({ email: req.body.email });
-      if (!user) throw Error("user not found");
-      if (user.isBlocked) throw Error("user is blocked");
-      const isMatch = bcrypt.compareSync(req.body.password, user.password);
-      if (!isMatch) throw Error("wrong password");
-      // نحتاج mongoose instance لـ generateAuthToken
-      const mongooseUser = await User.findById(user._id);
-      const tokens = await mongooseUser.generateAuthToken();
-      res.status(200).send(tokens);
-    } catch (e) {
-      res.status(400).send(e.message);
-    }
-  },
+login: async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) throw Error("user not found");
+    if (user.isBlocked) throw Error("user is blocked");
+    // ✅ toObject() يتجاوز toJSON ويُعيد الـ password
+    const rawUser = user.toObject();
+    const isMatch = bcrypt.compareSync(req.body.password, rawUser.password);
+    if (!isMatch) throw Error("wrong password");
+    const tokens = await user.generateAuthToken();
+    res.status(200).send(tokens);
+  } catch (e) {
+    res.status(400).send(e.message);
+  }
+},
 
   logout: async (req, res) => {
     try {

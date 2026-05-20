@@ -62,13 +62,13 @@ export const updateMySettings = async (req, res) => {
 export const updateSecuritySettings = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-
-    // ✅ جلب المستخدم مع الـ password مباشرة من MongoDB
-    const user = await User.collection.findOne({ _id: req.user._id });
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "המשתמש לא נמצא." });
     if (!currentPassword?.trim()) return res.status(400).json({ message: "יש להזין את הסיסמה הנוכחית." });
 
-    const isMatch = bcrypt.compareSync(currentPassword, user.password);
+    // ✅ toObject() يتجاوز toJSON
+    const rawUser = user.toObject();
+    const isMatch = bcrypt.compareSync(currentPassword, rawUser.password);
     if (!isMatch) return res.status(401).json({ message: "הסיסמה הנוכחית שגויה." });
 
     if (!newPassword?.trim()) return res.status(400).json({ message: "יש להזין סיסמה חדשה." });
@@ -76,10 +76,7 @@ export const updateSecuritySettings = async (req, res) => {
 
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(newPassword.trim(), salt);
-    await User.collection.updateOne(
-      { _id: req.user._id },
-      { $set: { password: hash } }
-    );
+    await User.findByIdAndUpdate(req.user._id, { $set: { password: hash } });
 
     return res.status(200).json({ message: "הסיסמה עודכנה בהצלחה." });
   } catch (e) {
