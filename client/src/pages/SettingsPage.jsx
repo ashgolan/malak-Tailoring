@@ -418,7 +418,7 @@ export default function SettingsPage() {
 
         {/* Theme - compact */}
         <SectionCard title="ערכת צבעים" icon="🎨" gradient="linear-gradient(135deg, #8b5cf6, #6d28d9)">
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(6, 1fr)", gap:8 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
             {Object.entries(THEMES).map(([key, t]) => (
               <button key={key} onClick={() => setTheme(key)} title={t.name}
                 style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, padding:"8px 4px", borderRadius:10, border:`2px solid ${themeName===key ? t.primary : "#e5e7eb"}`, background: themeName===key ? t.primaryLight : "#fff", cursor:"pointer", fontFamily:"inherit", transition:"all 0.15s" }}>

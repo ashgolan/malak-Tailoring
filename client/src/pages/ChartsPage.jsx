@@ -364,7 +364,7 @@ export default function ChartsPage() {
       </div>
 
       {/* Table */}
-      <div ref={printRef} style={{ background: "#fff", borderRadius: 16, border: "1px solid #f0f0ef", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+      <div ref={printRef} style={{ background: "#fff", borderRadius: 16, border: "1px solid #f0f0ef", overflow: "auto", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
         {isLoading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
             <div style={{ width: 32, height: 32, border: `4px solid ${theme.primaryBorder}`, borderTopColor: theme.primary, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
