@@ -1,3 +1,4 @@
+import { fmt, fo, bl, today } from "../utils/formatters.js";
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCrud } from "../hooks/useCrud";
@@ -6,9 +7,6 @@ import { useTheme } from "../context/ThemeContext";
 import Modal from "../components/ui/Modal";
 
 const EMPTY = { date: new Date().toISOString().split("T")[0], clientName: "", remark: "-", name: "", quantity: 1, number: 0, discount: 0, sale: 0, expenses: 0, totalAmount: 0, tax: false, colored: false };
-const fmt = (n) => Number(n || 0).toLocaleString("he-IL", { maximumFractionDigits: 2 });
-const fo = (e, color) => { e.target.style.borderColor = color; };
-const bl = (e) => { e.target.style.borderColor = "#e5e7eb"; };
 
 function ClientAutocomplete({ value, onChange, allClients, accent }) {
   const [suggestions, setSuggestions] = useState([]);

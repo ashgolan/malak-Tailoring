@@ -1,13 +1,10 @@
+import { fmt, fo, bl, today } from "../utils/formatters.js";
 import { useState } from "react";
 import { useCrud } from "../hooks/useCrud";
 import { salesToCompaniesApi } from "../api";
 import { useTheme } from "../context/ThemeContext";
 import Modal from "../components/ui/Modal";
 
-const today = new Date().toISOString().split("T")[0];
-const fmt = (n) => Number(n || 0).toLocaleString("he-IL", { maximumFractionDigits: 2 });
-const fo = (e, color) => { e.target.style.borderColor = color; };
-const bl = (e) => { e.target.style.borderColor = "#e5e7eb"; };
 
 const EMPTY = {
   date: today, clientName: "", name: "", kindOfWork: "",
