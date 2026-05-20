@@ -62,7 +62,9 @@ export const updateMySettings = async (req, res) => {
 export const updateSecuritySettings = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user._id);
+
+    // ✅ جلب المستخدم مع الـ password مباشرة من MongoDB
+    const user = await User.collection.findOne({ _id: req.user._id });
     if (!user) return res.status(404).json({ message: "המשתמש לא נמצא." });
     if (!currentPassword?.trim()) return res.status(400).json({ message: "יש להזין את הסיסמה הנוכחית." });
 
@@ -72,10 +74,12 @@ export const updateSecuritySettings = async (req, res) => {
     if (!newPassword?.trim()) return res.status(400).json({ message: "יש להזין סיסמה חדשה." });
     if (newPassword.trim().length < 6) return res.status(400).json({ message: "הסיסמה החדשה חייבת להכיל לפחות 6 תווים." });
 
-    // Use findByIdAndUpdate with $set to bypass mongoose pre-save middleware
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(newPassword.trim(), salt);
-    await User.findByIdAndUpdate(req.user._id, { $set: { password: hash } });
+    await User.collection.updateOne(
+      { _id: req.user._id },
+      { $set: { password: hash } }
+    );
 
     return res.status(200).json({ message: "הסיסמה עודכנה בהצלחה." });
   } catch (e) {
