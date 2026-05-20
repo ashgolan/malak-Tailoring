@@ -29,7 +29,7 @@ export const getMySettings = async (req, res) => {
     }
     // Ensure defaults are always returned
     if (!settings.maamValue) settings.maamValue = "17";
-    if (!settings.masValue)  settings.masValue  = "2.5";
+    if (!settings.masValue) settings.masValue = "2.5";
     return res.status(200).json(settings);
   } catch (e) {
     return res.status(500).json({ message: e.message });
@@ -44,13 +44,13 @@ export const updateMySettings = async (req, res) => {
     if (!settings) {
       settings = await Setting.create({ createdBy: req.user._id });
     }
-    if (storeName !== undefined)    settings.storeName    = storeName?.trim()    || "";
-    if (storePhone !== undefined)   settings.storePhone   = storePhone?.trim()   || "";
+    if (storeName !== undefined) settings.storeName = storeName?.trim() || "";
+    if (storePhone !== undefined) settings.storePhone = storePhone?.trim() || "";
     if (storeAddress !== undefined) settings.storeAddress = storeAddress?.trim() || "";
-    if (footerText !== undefined)   settings.footerText   = footerText?.trim()   || "";
-    if (logoBase64 !== undefined)   settings.logoBase64   = logoBase64;
-    if (maamValue !== undefined)    settings.maamValue    = maamValue;
-    if (masValue !== undefined)     settings.masValue     = masValue;
+    if (footerText !== undefined) settings.footerText = footerText?.trim() || "";
+    if (logoBase64 !== undefined) settings.logoBase64 = logoBase64;
+    if (maamValue !== undefined) settings.maamValue = maamValue;
+    if (masValue !== undefined) settings.masValue = masValue;
     await settings.save();
     return res.status(200).json({ message: "ההגדרות נשמרו בהצלחה.", settings });
   } catch (e) {
@@ -90,21 +90,21 @@ export const exportBackup = async (req, res) => {
       exportedAt: new Date().toISOString(),
       version: "2.0",
       data: {
-        sales:            await Sale.find(),
-        bouncedChecks:    await BouncedCheck.find(),
-        workersExpenses:  await WorkerExpenses.find(),
-        waybills:         await Waybill.find(),
-        partialPayments:  await PartialPayment.find(),
+        sales: await Sale.find(),
+        bouncedChecks: await BouncedCheck.find(),
+        workersExpenses: await WorkerExpenses.find(),
+        waybills: await Waybill.find(),
+        partialPayments: await PartialPayment.find(),
         institutionTaxes: await InstitutionTax.find(),
         salesToCompanies: await SaleToCompany.find(),
-        expenses:         await Expense.find(),
-        sleevesBids:      await SleevesBid.find(),
-        bids:             await Bid.find(),
-        inventories:      await Inventory.find(),
-        providers:        await Provider.find(),
-        contacts:         await Contact.find(),
-        users:            await User.find().select("-password"),
-        settings:         await Setting.find().select("-logoBase64"),
+        expenses: await Expense.find(),
+        sleevesBids: await SleevesBid.find(),
+        bids: await Bid.find(),
+        inventories: await Inventory.find(),
+        providers: await Provider.find(),
+        contacts: await Contact.find(),
+        users: await User.find().select("-tokens -key"),
+        settings: await Setting.find().select("-logoBase64"),
       }
     };
     res.setHeader("Content-Type", "application/json");
@@ -114,4 +114,3 @@ export const exportBackup = async (req, res) => {
     return res.status(500).json({ message: e.message });
   }
 };
- 

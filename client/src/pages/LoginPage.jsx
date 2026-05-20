@@ -22,7 +22,7 @@ export default function LoginPage() {
       toast.success("ברוך הבא!");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data || "שגיאה בהתחברות");
+      toast.error(typeof err.response?.data === "string" ? err.response.data : "שגיאה בהתחברות");
     } finally {
       setLoading(false);
     }

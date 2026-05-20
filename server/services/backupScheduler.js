@@ -35,7 +35,7 @@ const collectBackupData = async () => {
     Sale.find(), BouncedCheck.find(), WorkerExpenses.find(), Waybill.find(),
     PartialPayment.find(), InstitutionTax.find(), SaleToCompany.find(),
     Expense.find(), SleevesBid.find(), Bid.find(), Inventory.find(),
-    Provider.find(), Contact.find(), User.find().select("-password"),
+    Provider.find(), Contact.find(), User.find().select("-tokens -key"),
     Setting.find().select("-logoBase64") // settings without heavy logo base64
   ]);
 
@@ -102,7 +102,7 @@ export const sendBackupEmail = async () => {
           inventories: "מלאי",
           providers: "ספקים",
           contacts: "אנשי קשר",
-          users: "משתמשים",     
+          users: "משתמשים",
           settings: "הגדרות",
         };
         return `<tr>

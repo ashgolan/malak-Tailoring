@@ -59,16 +59,16 @@ export const restoreBackup = async (req, res) => {
 
     // Restore users with temp password
     if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-      const tempHash = bcrypt.hashSync(process.env.RESTORE_TEMP_PASSWORD, 10);
       let usersRestored = 0;
       for (const user of data.users) {
-        const { _id, __v, password, tokens, ...userData } = user; // ← أضف tokens هنا
+        const { _id, __v, tokens, key, ...userData } = user;
         const exists = await User.findOne({ email: userData.email });
         if (!exists) {
+          // ✅ يستخدم الـ hash الموجود في الـ backup مباشرة
           await User.collection.insertOne({
             ...userData,
-            password: tempHash,
-            tokens: [],        // ← tokens فارغة دائماً
+            tokens: [],
+            key: "unknown",
           });
           usersRestored++;
         }
