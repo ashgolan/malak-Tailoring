@@ -96,9 +96,27 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-white/30 text-xs mt-6">
-          מתפרת רושאן © {new Date().getFullYear()}
+        {/* Copyright App */}
+        <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.35)" }}>
+          © {new Date().getFullYear()} מתפרת רושאן — כל הזכויות שמורות
         </p>
+
+        {/* A.Shaalan Tech signature */}
+        <div style={{ textAlign: "center", marginTop: 16, paddingBottom: 8 }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, letterSpacing: "0.06em" }}>
+            פותח ועוצב על ידי
+          </div>
+          <img
+            src="/logo-shaalan.png"
+            alt="A.Shaalan Tech"
+            style={{
+              height: 80,  // ← كان 56
+              width: "auto",
+              display: "inline-block",
+              filter: "brightness(0.85)",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
