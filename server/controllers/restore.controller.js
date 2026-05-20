@@ -57,16 +57,19 @@ export const restoreBackup = async (req, res) => {
       }
     }
 
-    // Restore users with temp password (since password was excluded from backup)
+    // Restore users with temp password
     if (data.users && Array.isArray(data.users) && data.users.length > 0) {
       const tempHash = bcrypt.hashSync(process.env.RESTORE_TEMP_PASSWORD, 10);
       let usersRestored = 0;
       for (const user of data.users) {
-        const { _id, __v, password, ...userData } = user;
+        const { _id, __v, password, tokens, ...userData } = user; // ← أضف tokens هنا
         const exists = await User.findOne({ email: userData.email });
         if (!exists) {
-          // Use create with direct hash to bypass pre-save middleware
-          await User.collection.insertOne({ ...userData, password: tempHash });
+          await User.collection.insertOne({
+            ...userData,
+            password: tempHash,
+            tokens: [],        // ← tokens فارغة دائماً
+          });
           usersRestored++;
         }
       }
