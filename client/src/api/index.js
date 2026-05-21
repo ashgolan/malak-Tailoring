@@ -50,21 +50,21 @@ export const createApiService = (endpoint) => ({
 });
 
 // All services
-export const salesApi = createApiService("sales");
-export const bouncedChecksApi = createApiService("bouncedChecks");
-export const workersExpensesApi = createApiService("workersExpenses");
-export const waybillsApi = createApiService("waybills");
-export const partialPaymentApi = createApiService("partialPayment");
-export const institutionTaxApi = createApiService("institutionTax");
+export const salesApi            = createApiService("sales");
+export const bouncedChecksApi    = createApiService("bouncedChecks");
+export const workersExpensesApi  = createApiService("workersExpenses");
+export const waybillsApi         = createApiService("waybills");
+export const partialPaymentApi   = createApiService("partialPayment");
+export const institutionTaxApi   = createApiService("institutionTax");
 export const salesToCompaniesApi = createApiService("salesToCompanies");
-export const expensesApi = createApiService("expenses");
-export const sleevesBidsApi = createApiService("sleevesBids");
-export const bidsApi = createApiService("bids");
-export const companiesApi = createApiService("companies");
-export const inventoriesApi = createApiService("inventories");
-export const providersApi = createApiService("providers");
-export const contactsApi = createApiService("contacts");
-export const eventsApi = createApiService("events");
+export const expensesApi         = createApiService("expenses");
+export const sleevesBidsApi      = createApiService("sleevesBids");
+export const bidsApi             = createApiService("bids");
+export const companiesApi        = createApiService("companies");
+export const inventoriesApi      = createApiService("inventories");
+export const providersApi        = createApiService("providers");
+export const contactsApi         = createApiService("contacts");
+export const eventsApi           = createApiService("events");
 
 export const taxValuesApi = {
   get: () => settingsApi.get(),
@@ -75,8 +75,9 @@ export const settingsApi = {
   get: () => api.get("/settings"),
   update: (data) => api.put("/settings", data),
   updateSecurity: (data) => api.put("/settings/security", data),
-  backup: () => api.get("/settings/backup"),
-  sendBackup: () => api.post("/settings/send-backup"), // ← أضف هذا
+  // ✅ تغيير — responseType arraybuffer لاستقبال ملف ZIP
+  backup: () => api.get("/settings/backup", { responseType: "arraybuffer" }),
+  sendBackup: () => api.post("/settings/send-backup"),
 };
 
 export const usersApi = {

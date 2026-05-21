@@ -3,37 +3,29 @@ import { X } from "lucide-react";
 
 export default function Modal({ isOpen, onClose, title, children, size = "md" }) {
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const sizes = {
-    sm: "max-w-md",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-  };
+  const maxW = { sm: 420, md: 540, lg: 680, xl: 900 }[size] || 540;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} z-10 max-h-[90vh] flex flex-col`}>
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800">{title}</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
+    <div className="rosh-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="rosh-modal" style={{ width: "100%", maxWidth: maxW, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+        <div className="rosh-modal-header">
+          <h2 className="rosh-modal-title">{title}</h2>
+          <button onClick={onClose}
+            style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 8, color: "var(--text-3)", display: "flex", transition: "background 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+            <X size={18} />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 p-5">{children}</div>
+        <div className="rosh-modal-body" style={{ flex: 1 }}>
+          {children}
+        </div>
       </div>
     </div>
   );
