@@ -31,6 +31,11 @@ export default function WaybillsPage() {
 
   const currentYear = new Date().getFullYear();
 
+  // ── Autocomplete lists ──────────────────────────────────────
+  const allClients   = [...new Set((data||[]).map(i => i.clientName).filter(Boolean))].sort();
+  const allLocations = [...new Set((data||[]).map(i => i.location).filter(Boolean))].sort();
+  const allNames     = [...new Set((data||[]).map(i => i.name).filter(Boolean))].sort();
+
   const filtered = [...(data || [])]
     .filter(item => {
       if (!showAll) { if (!item.date) return item.colored; if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false; }
@@ -49,6 +54,7 @@ export default function WaybillsPage() {
     setModal(false); setForm(EMPTY);
   };
 
+  const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
   const ROW = { display:"flex", flexDirection:"row-reverse", alignItems:"center", width:"100%", borderBottom:"1px solid #f3f4f6" };
   const CELL = (w, extra={}) => ({ width:w, flexBasis:w, flexGrow:1, flexShrink:1, padding:"10px 10px", fontSize:13, textAlign:"right", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...extra });
 
@@ -77,7 +83,7 @@ export default function WaybillsPage() {
         </div>
       </div>
 
-      {/* Stats — desktop only */}
+      {/* Stats */}
       {!isMobile && (
         <div style={{ background:"#fff", borderRadius:12, border:`1px solid ${theme.primaryBorder}`, padding:"16px 24px", display:"flex", gap:32, alignItems:"center", flexWrap:"wrap" }}>
           {[
@@ -173,46 +179,73 @@ export default function WaybillsPage() {
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת תעודה" : "הוספת תעודת משלוח"} size="md">
         <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+
+            {/* date */}
             <div>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>תאריך</label>
-              <input type="date" value={editId ? editVals.date : form.date} onChange={e => editId ? setEditVals(v=>({...v,date:e.target.value})) : set("date", e.target.value)}
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <input type="date" value={editId ? editVals.date : form.date}
+                onChange={e => editId ? setEditVals(v=>({...v,date:e.target.value})) : set("date", e.target.value)}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
+
+            {/* clientName — Autocomplete */}
             <div>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>חברה / מוסד</label>
-              <input type="text" value={editId ? editVals.clientName : form.clientName} onChange={e => editId ? setEditVals(v=>({...v,clientName:e.target.value})) : set("clientName", e.target.value)} required
-                placeholder="שם החברה או המוסד"
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <input type="text" list="waybills-clients" autoComplete="off"
+                value={editId ? editVals.clientName : form.clientName}
+                onChange={e => editId ? setEditVals(v=>({...v,clientName:e.target.value})) : set("clientName", e.target.value)}
+                required placeholder="שם החברה או המוסד"
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="waybills-clients">
+                {allClients.map((c,i) => <option key={i} value={c} />)}
+              </datalist>
             </div>
+
+            {/* location — Autocomplete */}
             <div style={{ gridColumn:"1 / -1" }}>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>כתובת משלוח</label>
-              <input type="text" value={editId ? editVals.location : form.location} onChange={e => editId ? setEditVals(v=>({...v,location:e.target.value})) : set("location", e.target.value)} required
-                placeholder="רחוב, עיר..."
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <input type="text" list="waybills-locations" autoComplete="off"
+                value={editId ? editVals.location : form.location}
+                onChange={e => editId ? setEditVals(v=>({...v,location:e.target.value})) : set("location", e.target.value)}
+                required placeholder="רחוב, עיר..."
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="waybills-locations">
+                {allLocations.map((l,i) => <option key={i} value={l} />)}
+              </datalist>
             </div>
+
+            {/* name — Autocomplete */}
             <div style={{ gridColumn:"1 / -1" }}>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>תיאור מוצר</label>
-              <input type="text" value={editId ? editVals.name : form.name} onChange={e => editId ? setEditVals(v=>({...v,name:e.target.value})) : set("name", e.target.value)} required
-                placeholder="תיאור המוצר / הסחורה"
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <input type="text" list="waybills-names" autoComplete="off"
+                value={editId ? editVals.name : form.name}
+                onChange={e => editId ? setEditVals(v=>({...v,name:e.target.value})) : set("name", e.target.value)}
+                required placeholder="תיאור המוצר / הסחורה"
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="waybills-names">
+                {allNames.map((n,i) => <option key={i} value={n} />)}
+              </datalist>
             </div>
+
+            {/* quantity */}
             <div>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>כמות</label>
-              <input type="number" value={editId ? editVals.quantity : form.quantity} min="1" onChange={e => editId ? setEditVals(v=>({...v,quantity:e.target.value})) : set("quantity", e.target.value)} required
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <input type="number" min="1"
+                value={editId ? editVals.quantity : form.quantity}
+                onChange={e => editId ? setEditVals(v=>({...v,quantity:e.target.value})) : set("quantity", e.target.value)}
+                required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
+
+            {/* remark */}
             <div>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>מס׳ הזמנה</label>
-              <input type="text" value={editId ? editVals.remark : form.remark} onChange={e => editId ? setEditVals(v=>({...v,remark:e.target.value})) : set("remark", e.target.value)}
+              <input type="text"
+                value={editId ? editVals.remark : form.remark}
+                onChange={e => editId ? setEditVals(v=>({...v,remark:e.target.value})) : set("remark", e.target.value)}
                 placeholder="מספר הזמנה..."
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
+
           </div>
           <div style={{ display:"flex", gap:10, marginTop:4 }}>
             <button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={{ flex:1, padding:10, border:"1px solid #e5e7eb", borderRadius:8, background:"#fff", fontSize:13, fontWeight:500, color:"#6b7280", cursor:"pointer", fontFamily:"inherit" }}>ביטול</button>

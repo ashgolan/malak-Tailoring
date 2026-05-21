@@ -122,6 +122,10 @@ export default function PartialPaymentPage() {
 
   const currentYear = new Date().getFullYear();
 
+  // ── Autocomplete ────────────────────────────────────────────
+  const allClients = [...new Set((data||[]).map(i => i.clientName).filter(Boolean))].sort();
+  const allNames   = [...new Set((data||[]).map(i => i.name).filter(Boolean))].sort();
+
   const filtered = [...(data || [])]
     .filter(item => {
       if (!showAll) { if (!item.date) return item.colored; if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false; }
@@ -153,6 +157,7 @@ export default function PartialPaymentPage() {
     setForm(EMPTY);
   };
 
+  const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
   const CELL = (w, extra={}) => ({ width:w, flexBasis:w, flexGrow:1, flexShrink:1, padding:"10px 10px", fontSize:13, textAlign:"right", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...extra });
   const ROW = { display:"flex", flexDirection:"row-reverse", alignItems:"center", width:"100%", borderBottom:"1px solid #f3f4f6" };
 
@@ -181,7 +186,7 @@ export default function PartialPaymentPage() {
         </div>
       </div>
 
-      {/* Stats — desktop only */}
+      {/* Stats */}
       {!isMobile && (
         <div style={{ background:"#fff", borderRadius:12, border:`1px solid ${theme.primaryBorder}`, padding:"16px 24px", display:"flex", gap:0, alignItems:"center", flexWrap:"wrap" }}>
           {[
@@ -206,7 +211,7 @@ export default function PartialPaymentPage() {
         style={{ width:"100%", padding:"10px 14px", border:"1px solid #e5e7eb", borderRadius:10, fontSize:16, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
         onFocus={e => fo(e, theme.accent)} onBlur={bl} />
 
-      {/* Mobile Cards / Desktop Table */}
+      {/* Mobile / Desktop */}
       {isMobile ? (
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
           {filtered.length === 0 ? (
@@ -253,7 +258,6 @@ export default function PartialPaymentPage() {
             {COLS.map(col => <div key={col.key} style={{ ...CELL(col.width), color:"#fff", fontWeight:700, fontSize:12, padding:"12px 10px" }}>{col.label}</div>)}
             <div style={{ width:30, minWidth:30, flexShrink:0 }} />
           </div>
-
           {filtered.length === 0 ? (
             <div style={{ textAlign:"center", padding:"56px 20px", color:"#9ca3af" }}><div style={{ fontSize:32, marginBottom:12 }}>💳</div><div style={{ fontSize:15, fontWeight:500 }}>אין נתונים</div></div>
           ) : filtered.map((item, idx) => {
@@ -300,7 +304,6 @@ export default function PartialPaymentPage() {
               </div>
             );
           })}
-
           {filtered.length > 0 && (
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 16px", background:theme.primaryLight, borderTop:`2px solid ${theme.primaryBorder}` }}>
               <span style={{ fontSize:13, color:"#6b7280" }}>סה״כ ({filtered.length} רשומות)</span>
@@ -314,21 +317,50 @@ export default function PartialPaymentPage() {
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); }} title="הוספת תשלום חלקי">
         <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-            {[
-              { key:"date",         label:"תאריך",       type:"date"   },
-              { key:"clientName",   label:"קליינט",      type:"text"   },
-              { key:"name",         label:"עבור",        type:"text"   },
-              { key:"totalAmount",  label:"סה״כ לתשלום", type:"number" },
-              { key:"advanceAmount",label:"שולם מראש",   type:"number" },
-            ].map(f => (
-              <div key={f.key}>
-                <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>{f.label}</label>
-                <input type={f.type} value={form[f.key]} onChange={e => setForm(p=>({...p,[f.key]:e.target.value}))}
-                  required={["date","clientName","name"].includes(f.key)} min={f.type==="number"?"0":undefined}
-                  style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                  onFocus={e => fo(e, theme.accent)} onBlur={bl} />
-              </div>
-            ))}
+
+            {/* date */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>תאריך</label>
+              <input type="date" value={form.date} onChange={e => setForm(p=>({...p,date:e.target.value}))}
+                required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* clientName — Autocomplete */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>קליינט</label>
+              <input type="text" list="partial-clients" autoComplete="off"
+                value={form.clientName} onChange={e => setForm(p=>({...p,clientName:e.target.value}))}
+                required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="partial-clients">
+                {allClients.map((c,i) => <option key={i} value={c} />)}
+              </datalist>
+            </div>
+
+            {/* name — Autocomplete */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>עבור</label>
+              <input type="text" list="partial-names" autoComplete="off"
+                value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))}
+                required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="partial-names">
+                {allNames.map((n,i) => <option key={i} value={n} />)}
+              </datalist>
+            </div>
+
+            {/* totalAmount */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>סה״כ לתשלום</label>
+              <input type="number" min="0" value={form.totalAmount} onChange={e => setForm(p=>({...p,totalAmount:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* advanceAmount */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>שולם מראש</label>
+              <input type="number" min="0" value={form.advanceAmount} onChange={e => setForm(p=>({...p,advanceAmount:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
           </div>
           {(Number(form.totalAmount) > 0 || Number(form.advanceAmount) > 0) && (
             <div style={{ background: Number(form.totalAmount)-Number(form.advanceAmount)>0 ? "#fef2f2" : "#f0fdf4", borderRadius:12, padding:"12px 16px", border:`1px solid ${Number(form.totalAmount)-Number(form.advanceAmount)>0 ? "#fecaca":"#bbf7d0"}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>

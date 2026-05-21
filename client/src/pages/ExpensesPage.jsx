@@ -9,14 +9,8 @@ import MobileCards from "../components/tables/MobileCards";
 import Modal from "../components/ui/Modal";
 
 const EMPTY = {
-  date: today(),
-  name: "",
-  number: 0,
-  paymentDate: "",
-  colored: false,
-  taxNumber: "",
-  tax: false,
-  totalAmount: 0
+  date: today(), name: "", number: 0, paymentDate: "",
+  colored: false, taxNumber: "", tax: false, totalAmount: 0
 };
 
 const COLS = [
@@ -44,6 +38,9 @@ export default function ExpensesPage() {
   const maam = Number(taxValues?.maamValue || 17);
   const currentYear = new Date().getFullYear();
 
+  // ── Autocomplete ────────────────────────────────────────────
+  const allNames = [...new Set((data||[]).map(i => i.name).filter(Boolean))].sort();
+
   const filtered = [...(data || [])]
     .filter(item => {
       if (!showAll) { if (!item.date) return item.colored; const d = new Date(item.date); if (d.getFullYear() !== currentYear && !item.colored) return false; }
@@ -61,6 +58,7 @@ export default function ExpensesPage() {
     setModal(false); setForm(EMPTY);
   };
 
+  const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
   const CELL = (w, extra={}) => ({ width:w, flexBasis:w, flexGrow:1, flexShrink:1, padding:"10px 10px", fontSize:13, textAlign:"right", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...extra });
   const ROW = { display:"flex", flexDirection:"row-reverse", alignItems:"center", width:"100%", borderBottom:"1px solid #f3f4f6" };
 
@@ -89,7 +87,7 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Stats — desktop only */}
+      {/* Stats */}
       {!isMobile && (
         <div style={{ background:"#fff", borderRadius:12, border:`1px solid ${theme.primaryBorder}`, padding:"16px 24px", display:"flex", gap:32, alignItems:"center", flexWrap:"wrap" }}>
           <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
@@ -109,7 +107,7 @@ export default function ExpensesPage() {
         style={{ width:"100%", padding:"10px 14px", border:"1px solid #e5e7eb", borderRadius:10, fontSize:16, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
         onFocus={e => fo(e, theme.accent)} onBlur={bl} />
 
-      {/* Mobile Cards / Desktop Table */}
+      {/* Mobile / Desktop */}
       {isMobile ? (
         <MobileCards
           items={filtered}
@@ -192,22 +190,56 @@ export default function ExpensesPage() {
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת רשומה" : "הוספת רשומה"}>
         <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-            {[
-              { key:"date",        label:"תאריך",        type:"date"   },
-              { key:"name",        label:"שם / ספק",     type:"text"   },
-              { key:"number",      label:"סכום",         type:"number" },
-              { key:"taxNumber",   label:"מס׳ חשבונית",  type:"text"   },
-              { key:"paymentDate", label:"ת.תשלום",      type:"date"   },
-            ].map(f => (
-              <div key={f.key}>
-                <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>{f.label}</label>
-                <input type={f.type}
-                  value={editId ? editVals[f.key]??""  : form[f.key]}
-                  onChange={e => editId ? setEditVals(v=>({...v,[f.key]:e.target.value})) : setForm(p=>({...p,[f.key]:e.target.value}))}
-                  style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                  onFocus={e => fo(e, theme.accent)} onBlur={bl} />
-              </div>
-            ))}
+
+            {/* date */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>תאריך</label>
+              <input type="date"
+                value={editId ? editVals.date??""  : form.date}
+                onChange={e => editId ? setEditVals(v=>({...v,date:e.target.value})) : setForm(p=>({...p,date:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* name — Autocomplete */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>שם / ספק</label>
+              <input type="text" list="expenses-names" autoComplete="off"
+                value={editId ? editVals.name??""  : form.name}
+                onChange={e => editId ? setEditVals(v=>({...v,name:e.target.value})) : setForm(p=>({...p,name:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="expenses-names">
+                {allNames.map((n,i) => <option key={i} value={n} />)}
+              </datalist>
+            </div>
+
+            {/* number */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>סכום</label>
+              <input type="number"
+                value={editId ? editVals.number??""  : form.number}
+                onChange={e => editId ? setEditVals(v=>({...v,number:e.target.value})) : setForm(p=>({...p,number:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* taxNumber */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>מס׳ חשבונית</label>
+              <input type="text"
+                value={editId ? editVals.taxNumber??""  : form.taxNumber}
+                onChange={e => editId ? setEditVals(v=>({...v,taxNumber:e.target.value})) : setForm(p=>({...p,taxNumber:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* paymentDate */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>ת.תשלום</label>
+              <input type="date"
+                value={editId ? editVals.paymentDate??""  : form.paymentDate}
+                onChange={e => editId ? setEditVals(v=>({...v,paymentDate:e.target.value})) : setForm(p=>({...p,paymentDate:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* tax toggle */}
             <div style={{ display:"flex", alignItems:"center", gap:10, paddingTop:20 }}>
               <div style={{ position:"relative", width:36, height:20 }}>
                 <div onClick={() => editId ? setEditVals(v=>({...v, tax: !v.tax})) : setForm(p => ({...p, tax: !p.tax}))}
@@ -217,6 +249,7 @@ export default function ExpensesPage() {
               </div>
               <label style={{ fontSize:13, fontWeight:600, color:"#374151" }}>כולל מע״מ {maam}%</label>
             </div>
+
           </div>
           <div style={{ display:"flex", gap:10 }}>
             <button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={{ flex:1, padding:10, border:"1px solid #e5e7eb", borderRadius:8, background:"#fff", fontSize:13, fontWeight:500, color:"#6b7280", cursor:"pointer", fontFamily:"inherit" }}>ביטול</button>

@@ -51,6 +51,9 @@ export default function BouncedChecksPage() {
 
   const currentYear = new Date().getFullYear();
 
+  // ── Autocomplete lists ──────────────────────────────────────
+  const allClients = [...new Set((data||[]).map(i => i.clientName).filter(Boolean))].sort();
+
   const filtered = [...(data || [])]
     .filter(item => {
       if (!showAll) { if (!item.date) return item.colored; const d = new Date(item.date); if (d.getFullYear() !== currentYear && !item.colored) return false; }
@@ -66,6 +69,8 @@ export default function BouncedChecksPage() {
     create({ ...form, totalAmount: Number(form.number) });
     setModal(false); setForm(EMPTY);
   };
+
+  const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
 
   const CELL = (w, extra={}) => ({ width:w, flexBasis:w, flexGrow:1, flexShrink:1, padding:"10px 10px", fontSize:13, textAlign:"right", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...extra });
   const ROW = { display:"flex", flexDirection:"row-reverse", alignItems:"center", width:"100%", borderBottom:"1px solid #f3f4f6" };
@@ -186,9 +191,31 @@ export default function BouncedChecksPage() {
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת רשומה" : "הוספת רשומה"}>
         <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+
+            {/* clientName — with Autocomplete */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>קליינט</label>
+              <input type="text" list="bounced-clients"
+                value={editId ? editVals.clientName??""  : form.clientName}
+                onChange={e => editId ? setEditVals(v=>({...v, clientName:e.target.value})) : setForm(p=>({...p, clientName:e.target.value}))}
+                autoComplete="off" style={inputStyle}
+                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="bounced-clients">
+                {allClients.map((c, i) => <option key={i} value={c} />)}
+              </datalist>
+            </div>
+
+            {/* date */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>תאריך</label>
+              <input type="date"
+                value={editId ? editVals.date??""  : form.date}
+                onChange={e => editId ? setEditVals(v=>({...v, date:e.target.value})) : setForm(p=>({...p, date:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* remaining fields */}
             {[
-              { key:"date",          label:"תאריך",         type:"date"   },
-              { key:"clientName",    label:"קליינט",         type:"text"   },
               { key:"checkNumber",   label:"מס׳ שיק",        type:"number" },
               { key:"bankNumber",    label:"מס׳ בנק",        type:"number" },
               { key:"branchNumber",  label:"מס׳ סניף",       type:"number" },
@@ -200,10 +227,10 @@ export default function BouncedChecksPage() {
             ].map(f => (
               <div key={f.key}>
                 <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>{f.label}</label>
-                <input type={f.type} value={editId ? editVals[f.key]??""  : form[f.key]}
+                <input type={f.type}
+                  value={editId ? editVals[f.key]??""  : form[f.key]}
                   onChange={e => editId ? setEditVals(v=>({...v,[f.key]:e.target.value})) : setForm(p=>({...p,[f.key]:e.target.value}))}
-                  style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                  onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+                  style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
               </div>
             ))}
           </div>

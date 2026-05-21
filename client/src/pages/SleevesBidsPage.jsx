@@ -34,6 +34,9 @@ export default function SleevesBidsPage() {
   const maam = Number(taxValues?.maamValue || 17);
   const currentYear = new Date().getFullYear();
 
+  // ── Autocomplete ────────────────────────────────────────────
+  const allClients = [...new Set((data||[]).map(i => i.clientName).filter(Boolean))].sort();
+
   const filtered = [...(data || [])]
     .filter(item => {
       if (!showAll) { if (!item.date) return item.colored; const d = new Date(item.date); if (d.getFullYear() !== currentYear && !item.colored) return false; }
@@ -51,6 +54,7 @@ export default function SleevesBidsPage() {
     setModal(false); setForm(EMPTY);
   };
 
+  const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
   const CELL = (w, extra={}) => ({ width:w, flexBasis:w, flexGrow:1, flexShrink:1, padding:"10px 10px", fontSize:13, textAlign:"right", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...extra });
   const ROW = { display:"flex", flexDirection:"row-reverse", alignItems:"center", width:"100%", borderBottom:"1px solid #f3f4f6" };
 
@@ -79,7 +83,7 @@ export default function SleevesBidsPage() {
         </div>
       </div>
 
-      {/* Stats — desktop only */}
+      {/* Stats */}
       {!isMobile && (
         <div style={{ background:"#fff", borderRadius:12, border:`1px solid ${theme.primaryBorder}`, padding:"16px 24px", display:"flex", gap:32, alignItems:"center", flexWrap:"wrap" }}>
           <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
@@ -173,22 +177,47 @@ export default function SleevesBidsPage() {
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת רשומה" : "הוספת רשומה"}>
         <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-            {[
-              { key:"date",       label:"תאריך",          type:"date"   },
-              { key:"clientName", label:"קליינט",         type:"text"   },
-              { key:"number",     label:"מחיר ליחידה",    type:"number" },
-              { key:"quantity",   label:"כמות",           type:"number" },
-            ].map(f => (
-              <div key={f.key}>
-                <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>{f.label}</label>
-                <input type={f.type}
-                  value={editId ? editVals[f.key]??""  : form[f.key]}
-                  onChange={e => editId ? setEditVals(v=>({...v,[f.key]:e.target.value})) : setForm(p=>({...p,[f.key]:e.target.value}))}
-                  required={["date","clientName"].includes(f.key)} min={f.type==="number"?"0":undefined}
-                  style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                  onFocus={e => fo(e, theme.accent)} onBlur={bl} />
-              </div>
-            ))}
+
+            {/* date */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>תאריך</label>
+              <input type="date"
+                value={editId ? editVals.date??""  : form.date}
+                onChange={e => editId ? setEditVals(v=>({...v,date:e.target.value})) : setForm(p=>({...p,date:e.target.value}))}
+                required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* clientName — Autocomplete */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>קליינט</label>
+              <input type="text" list="sleeves-clients" autoComplete="off"
+                value={editId ? editVals.clientName??""  : form.clientName}
+                onChange={e => editId ? setEditVals(v=>({...v,clientName:e.target.value})) : setForm(p=>({...p,clientName:e.target.value}))}
+                required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <datalist id="sleeves-clients">
+                {allClients.map((c,i) => <option key={i} value={c} />)}
+              </datalist>
+            </div>
+
+            {/* number */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>מחיר ליחידה</label>
+              <input type="number" min="0"
+                value={editId ? editVals.number??""  : form.number}
+                onChange={e => editId ? setEditVals(v=>({...v,number:e.target.value})) : setForm(p=>({...p,number:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* quantity */}
+            <div>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>כמות</label>
+              <input type="number" min="0"
+                value={editId ? editVals.quantity??""  : form.quantity}
+                onChange={e => editId ? setEditVals(v=>({...v,quantity:e.target.value})) : setForm(p=>({...p,quantity:e.target.value}))}
+                style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+
+            {/* tax toggle */}
             <div style={{ display:"flex", alignItems:"center", gap:10, paddingTop:20 }}>
               <div style={{ position:"relative", width:36, height:20 }}>
                 <div onClick={() => editId ? setEditVals(v=>({...v,tax:!v.tax})) : setForm(p=>({...p,tax:!p.tax}))}
@@ -198,6 +227,7 @@ export default function SleevesBidsPage() {
               </div>
               <label style={{ fontSize:13, fontWeight:600, color:"#374151" }}>כולל מע״מ {maam}%</label>
             </div>
+
           </div>
           <div style={{ display:"flex", gap:10 }}>
             <button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={{ flex:1, padding:10, border:"1px solid #e5e7eb", borderRadius:8, background:"#fff", fontSize:13, fontWeight:500, color:"#6b7280", cursor:"pointer", fontFamily:"inherit" }}>ביטול</button>

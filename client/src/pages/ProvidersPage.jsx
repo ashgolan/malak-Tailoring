@@ -26,6 +26,9 @@ export default function ProvidersPage() {
   const [editId, setEditId] = useState(null);
   const [editVals, setEditVals] = useState({});
 
+  // ── Autocomplete ────────────────────────────────────────────
+  const allNames = [...new Set((data||[]).map(i => i.name).filter(Boolean))].sort();
+
   const filtered = (data || []).filter(item =>
     !search || ["name","number","mail"].some(f => String(item[f]||"").toLowerCase().includes(search.toLowerCase()))
   );
@@ -37,17 +40,10 @@ export default function ProvidersPage() {
     setModal(false); setForm(EMPTY);
   };
 
+  const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
   const ROW = { display:"flex", flexDirection:"row-reverse", alignItems:"center", width:"100%", borderBottom:"1px solid #f3f4f6" };
   const CELL = (w, extra={}) => ({ width:w, flexBasis:w, flexGrow:1, flexShrink:1, padding:"10px 12px", fontSize:13, textAlign:"right", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...extra });
 
-  if (isLoading) return (
-    <div style={{ display:"flex", justifyContent:"center", padding:80 }}>
-      <div style={{ width:36, height:36, border:`4px solid ${theme.primaryBorder}`, borderTopColor:theme.primary, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-
-  // Mobile card render with clickable phone/email
   const mobileColsWithRender = COLS.map(col => ({
     ...col,
     render: col.key === "mail" && ((v) => v && v !== "-"
@@ -58,6 +54,13 @@ export default function ProvidersPage() {
         ? <a href={`tel:${v}`} style={{ color:theme.primary, textDecoration:"none" }}>{v}</a>
         : (v || "-") }
     : col
+  );
+
+  if (isLoading) return (
+    <div style={{ display:"flex", justifyContent:"center", padding:80 }}>
+      <div style={{ width:36, height:36, border:`4px solid ${theme.primaryBorder}`, borderTopColor:theme.primary, borderRadius:"50%", animation:"spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
   );
 
   return (
@@ -80,7 +83,7 @@ export default function ProvidersPage() {
         style={{ width:"100%", padding:"10px 14px", border:"1px solid #e5e7eb", borderRadius:10, fontSize:16, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
         onFocus={e => fo(e, theme.accent)} onBlur={bl} />
 
-      {/* Mobile Cards / Desktop Table */}
+      {/* Mobile / Desktop */}
       {isMobile ? (
         <MobileCards
           items={filtered}
@@ -150,22 +153,46 @@ export default function ProvidersPage() {
       {/* Modal */}
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת ספק" : "הוספת ספק"}>
         <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
-          {[
-            { key:"name",     label:"שם ספק",        type:"text"  },
-            { key:"number",   label:"טלפון",          type:"tel"   },
-            { key:"mail",     label:"דואר אלקטרוני", type:"email" },
-            { key:"bankProps",label:"פרטי בנק",       type:"text"  },
-          ].map(f => (
-            <div key={f.key}>
-              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>{f.label}</label>
-              <input type={f.type}
-                value={editId ? editVals[f.key]??""  : form[f.key]}
-                onChange={e => editId ? setEditVals(v=>({...v,[f.key]:e.target.value})) : setForm(p=>({...p,[f.key]:e.target.value}))}
-                required={f.key==="name"} dir={f.key==="mail" ? "ltr" : "rtl"}
-                style={{ width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => fo(e, theme.accent)} onBlur={bl} />
-            </div>
-          ))}
+
+          {/* name — Autocomplete */}
+          <div>
+            <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>שם ספק</label>
+            <input type="text" list="providers-names" autoComplete="off"
+              value={editId ? editVals.name??""  : form.name}
+              onChange={e => editId ? setEditVals(v=>({...v,name:e.target.value})) : setForm(p=>({...p,name:e.target.value}))}
+              required style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            <datalist id="providers-names">
+              {allNames.map((n,i) => <option key={i} value={n} />)}
+            </datalist>
+          </div>
+
+          {/* number */}
+          <div>
+            <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>טלפון</label>
+            <input type="tel"
+              value={editId ? editVals.number??""  : form.number}
+              onChange={e => editId ? setEditVals(v=>({...v,number:e.target.value})) : setForm(p=>({...p,number:e.target.value}))}
+              style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+          </div>
+
+          {/* mail */}
+          <div>
+            <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>דואר אלקטרוני</label>
+            <input type="email" dir="ltr"
+              value={editId ? editVals.mail??""  : form.mail}
+              onChange={e => editId ? setEditVals(v=>({...v,mail:e.target.value})) : setForm(p=>({...p,mail:e.target.value}))}
+              style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+          </div>
+
+          {/* bankProps */}
+          <div>
+            <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>פרטי בנק</label>
+            <input type="text"
+              value={editId ? editVals.bankProps??""  : form.bankProps}
+              onChange={e => editId ? setEditVals(v=>({...v,bankProps:e.target.value})) : setForm(p=>({...p,bankProps:e.target.value}))}
+              style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+          </div>
+
           <div style={{ display:"flex", gap:10, marginTop:4 }}>
             <button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={{ flex:1, padding:10, border:"1px solid #e5e7eb", borderRadius:8, background:"#fff", fontSize:13, fontWeight:500, color:"#6b7280", cursor:"pointer", fontFamily:"inherit" }}>ביטול</button>
             <button type="submit" style={{ flex:2, padding:10, border:"none", borderRadius:8, background:theme.gradient, fontSize:14, fontWeight:600, color:"#fff", cursor:"pointer", fontFamily:"inherit" }}>שמור</button>
