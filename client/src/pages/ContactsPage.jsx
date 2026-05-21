@@ -5,9 +5,9 @@ import { useTheme } from "../context/ThemeContext";
 import { useIsMobile } from "../hooks/useIsMobile";
 import MobileCards from "../components/tables/MobileCards";
 import Modal from "../components/ui/Modal";
-import { fmt, fo, bl } from "../utils/formatters.js";
+import { fo, bl } from "../utils/formatters.js";
 
-const EMPTY = { name: "", number: "-", phone: "-" };
+const EMPTY = { name: "", phone: "-" };
 
 const COLS = [
   { key: "phone", label: "טלפון",       width: "40%" },
@@ -24,11 +24,10 @@ export default function ContactsPage() {
   const [editId, setEditId] = useState(null);
   const [editVals, setEditVals] = useState({});
 
-  // ── Autocomplete ────────────────────────────────────────────
   const allNames = [...new Set((data||[]).map(i => i.name).filter(Boolean))].sort();
 
   const filtered = (data || []).filter(item =>
-    !search || ["name","number","phone"].some(f => String(item[f]||"").toLowerCase().includes(search.toLowerCase()))
+    !search || ["name","phone"].some(f => String(item[f]||"").toLowerCase().includes(search.toLowerCase()))
   );
 
   const inputStyle = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", fontFamily:"inherit" };
@@ -77,7 +76,6 @@ export default function ContactsPage() {
             <div style={{ width:80, minWidth:80, padding:"12px 8px", fontSize:12, fontWeight:700, textAlign:"center", flexShrink:0 }}>פעולות</div>
             {COLS.map(col => <div key={col.key} style={{ ...CELL(col.width), color:"#fff", fontWeight:700, fontSize:12, padding:"12px 12px" }}>{col.label}</div>)}
           </div>
-
           {filtered.length === 0 ? (
             <div style={{ textAlign:"center", padding:"56px 20px", color:"#9ca3af" }}>
               <div style={{ fontSize:32, marginBottom:12 }}>📞</div>
@@ -145,15 +143,6 @@ export default function ContactsPage() {
             <datalist id="contacts-names">
               {allNames.map((n,i) => <option key={i} value={n} />)}
             </datalist>
-          </div>
-
-          {/* number */}
-          <div>
-            <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#6b7280", marginBottom:6 }}>מספר</label>
-            <input type="text"
-              value={editId ? editVals.number??""  : form.number}
-              onChange={e => editId ? setEditVals(v=>({...v,number:e.target.value})) : setForm(p=>({...p,number:e.target.value}))}
-              style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
           </div>
 
           {/* phone */}
