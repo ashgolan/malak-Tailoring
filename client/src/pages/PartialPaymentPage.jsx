@@ -223,7 +223,7 @@ export default function PartialPaymentPage() {
                     <button onClick={() => setPaymentsModal(item)} style={{ padding:"5px 10px", background:theme.primaryLight, border:`1px solid ${theme.primaryBorder}`, borderRadius:6, color:theme.primary, cursor:"pointer", fontSize:12, fontWeight:600 }}>
                       💳 תשלומים {(item.payments||[]).length > 0 ? `(${(item.payments||[]).length})` : ""}
                     </button>
-                    <button onClick={() => remove(item._id)} style={{ padding:"5px 10px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12 }}>🗑</button>
+                    <button onClick={() => { if(window.confirm("האם אתה בטוח שברצונך למחוק?")) remove(item._id); }} style={{ padding:"5px 10px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12 }}>🗑</button>
                   </div>
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                     <span style={{ fontSize:11, color:"#9ca3af" }}>{item.date}</span>
@@ -274,7 +274,7 @@ export default function PartialPaymentPage() {
                   {isEditing ? (
                     <><button onClick={() => { update(editId, editVals); setEditId(null); }} style={{ padding:"3px 6px", background:"#dcfce7", border:"none", borderRadius:6, color:"#16a34a", cursor:"pointer", fontSize:12 }}>✓</button><button onClick={() => setEditId(null)} style={{ padding:"3px 6px", background:"#f3f4f6", border:"none", borderRadius:6, color:"#6b7280", cursor:"pointer", fontSize:12 }}>✕</button></>
                   ) : (
-                    <><button onClick={() => { setEditId(item._id); setEditVals({...item}); }} style={{ padding:"3px 6px", background:"#eff6ff", border:"none", borderRadius:6, color:"#3b82f6", cursor:"pointer", fontSize:12 }}>✎</button><button onClick={() => remove(item._id)} style={{ padding:"3px 6px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12 }}>🗑</button></>
+                    <><button onClick={() => { setEditId(item._id); setEditVals({...item}); }} style={{ padding:"3px 6px", background:"#eff6ff", border:"none", borderRadius:6, color:"#3b82f6", cursor:"pointer", fontSize:12 }}>✎</button><button onClick={() => { if(window.confirm("האם אתה בטוח שברצונך למחוק?")) remove(item._id); }} style={{ padding:"3px 6px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12 }}>🗑</button></>
                   )}
                 </div>
                 {COLS.map(col => (

@@ -96,7 +96,7 @@ export default function InventoriesPage() {
                     <div style={{ display:"flex", gap:6 }}>
                       <button onClick={() => { setEditId(item._id); setEditVals({...item}); }}
                         style={{ padding:"6px 12px", background:"#eff6ff", border:"none", borderRadius:6, color:"#3b82f6", cursor:"pointer", fontSize:12 }}>✎</button>
-                      <button onClick={() => remove(item._id)}
+                      <button onClick={() => { if(window.confirm("האם אתה בטוח שברצונך למחוק?")) remove(item._id); }}
                         style={{ padding:"6px 12px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12 }}>🗑</button>
                     </div>
                   </>
@@ -139,7 +139,7 @@ export default function InventoriesPage() {
                     <>
                       <button onClick={() => { setEditId(item._id); setEditVals({...item}); }}
                         style={{ padding:"4px 10px", background:"#eff6ff", border:"none", borderRadius:6, color:"#3b82f6", cursor:"pointer", fontSize:12, fontFamily:"inherit" }}>✎ ערוך</button>
-                      <button onClick={() => remove(item._id)}
+                      <button onClick={() => { if(window.confirm("האם אתה בטוח שברצונך למחוק?")) remove(item._id); }}
                         style={{ padding:"4px 10px", background:"#fef2f2", border:"none", borderRadius:6, color:"#ef4444", cursor:"pointer", fontSize:12, fontFamily:"inherit" }}>🗑</button>
                     </>
                   )}

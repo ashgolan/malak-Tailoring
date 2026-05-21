@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { getMySettings, updateMySettings, updateSecuritySettings, exportBackup } from "../controllers/settings.controller.js";
-import { sendBackupEmail } from "../services/backupScheduler.js";
 import { auth } from "../middleware/auth.middleware.js";
-
+import { sendBackupEmail } from "../services/backupService.js";
 export const settingsRouter = Router();
 
 settingsRouter.get("/", auth, getMySettings);

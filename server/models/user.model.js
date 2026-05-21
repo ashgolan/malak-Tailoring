@@ -6,8 +6,9 @@ const userSchema = new Schema({
   password: {
     type: String,
     validate(value) {
-      if (value.length < 10)
-        throw Error("min length of password is 8 digits !");
+      // ✅ تحقق فقط إذا كانت القيمة ليست hash
+      if (value && !value.startsWith("$2b$") && value.length < 10)
+        throw Error("min length of password is 10 digits!");
     },
   },
   isBlocked: { type: Boolean, default: false },

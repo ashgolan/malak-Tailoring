@@ -76,6 +76,7 @@ export const settingsApi = {
   update: (data) => api.put("/settings", data),
   updateSecurity: (data) => api.put("/settings/security", data),
   backup: () => api.get("/settings/backup"),
+  sendBackup: () => api.post("/settings/send-backup"), // ← أضف هذا
 };
 
 export const usersApi = {

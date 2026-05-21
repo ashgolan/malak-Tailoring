@@ -85,32 +85,14 @@ export const updateSecuritySettings = async (req, res) => {
 };
 
 // Full backup - export all data as JSON
+import { createBackupZip } from "../services/backupService.js";
+
 export const exportBackup = async (req, res) => {
   try {
-    const backup = {
-      exportedAt: new Date().toISOString(),
-      version: "2.0",
-      data: {
-        sales: await Sale.find(),
-        bouncedChecks: await BouncedCheck.find(),
-        workersExpenses: await WorkerExpenses.find(),
-        waybills: await Waybill.find(),
-        partialPayments: await PartialPayment.find(),
-        institutionTaxes: await InstitutionTax.find(),
-        salesToCompanies: await SaleToCompany.find(),
-        expenses: await Expense.find(),
-        sleevesBids: await SleevesBid.find(),
-        bids: await Bid.find(),
-        inventories: await Inventory.find(),
-        providers: await Provider.find(),
-        contacts: await Contact.find(),
-        users: await User.find().select("-tokens -key"),
-        settings: await Setting.find().select("-logoBase64"),
-      }
-    };
-    res.setHeader("Content-Type", "application/json");
-    res.setHeader("Content-Disposition", `attachment; filename=roshan-backup-${new Date().toISOString().split("T")[0]}.json`);
-    return res.status(200).json(backup);
+    const zipBuffer = await createBackupZip();
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename=roshan-backup-${new Date().toISOString().split("T")[0]}.zip`);
+    return res.status(200).send(zipBuffer);
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }
