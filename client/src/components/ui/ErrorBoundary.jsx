@@ -1,18 +1,4 @@
-/**
- * ErrorBoundary.jsx
- * ─────────────────
- * يمنع انهيار التطبيق بالكامل عند حدوث خطأ في أي component.
- *
- * الاستخدام الأساسي — في App.jsx:
- *   <ErrorBoundary>
- *     <Routes>...</Routes>
- *   </ErrorBoundary>
- *
- * الاستخدام على مستوى الصفحة:
- *   <ErrorBoundary fallback={<p>خطأ في هذا القسم</p>}>
- *     <SalesPage />
- *   </ErrorBoundary>
- */
+
 
 import { Component } from "react";
 
