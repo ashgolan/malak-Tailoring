@@ -33,8 +33,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl roshan-gold-bg shadow-2xl mb-4">
-            <Scissors className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl shadow-2xl mb-4" style={{ background: "transparent" }}>
+            <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 80, height: 80, objectFit: "contain" }} />
           </div>
           <h1 className="text-3xl font-bold text-white mb-1">מתפרת רושאן</h1>
           <p className="text-white/50 text-sm">Roshan Tailoring Management</p>

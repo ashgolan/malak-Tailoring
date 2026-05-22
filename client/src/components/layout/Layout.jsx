@@ -62,28 +62,28 @@ function useBreakpoint() {
 }
 
 const navItems = [
-  { path: "/",                   label: "לוח בקרה",         icon: LayoutDashboard, exact: true },
-  { path: "/sales",              label: "מכירות",            icon: ShoppingCart },
-  { path: "/sleeves-bids",       label: "שרוולים",           icon: Scissors },
-  { path: "/bids",               label: "הצעות מחיר",        icon: FileText },
-  { path: "/bounced-checks",     label: "שיקים דחויים",      icon: CheckSquare },
-  { path: "/workers-expenses",   label: "הוצאות עובדים",     icon: Users },
-  { path: "/waybills",           label: "תעודות משלוח",      icon: Truck },
-  { path: "/partial-payment",    label: "תשלום חלקי",        icon: CreditCard },
-  { path: "/institution-tax",    label: "חשבוניות למוסדות",  icon: Building2 },
-  { path: "/sales-to-companies", label: "מכירות לחברות",     icon: Building },
-  { path: "/expenses",           label: "הוצאות",            icon: Wallet },
-  { path: "/inventories",        label: "מלאי",              icon: Package },
-  { path: "/providers",          label: "ספקים",             icon: UserCircle },
-  { path: "/contacts",           label: "אנשי קשר",          icon: BookOpen },
-  { path: "/charts",             label: "דוחות",             icon: BarChart3 },
-  { path: "/settings",           label: "הגדרות",            icon: Settings },
+  { path: "/", label: "לוח בקרה", icon: LayoutDashboard, exact: true },
+  { path: "/sales", label: "מכירות", icon: ShoppingCart },
+  { path: "/sleeves-bids", label: "שרוולים", icon: Scissors },
+  { path: "/bids", label: "הצעות מחיר", icon: FileText },
+  { path: "/bounced-checks", label: "שיקים דחויים", icon: CheckSquare },
+  { path: "/workers-expenses", label: "הוצאות עובדים", icon: Users },
+  { path: "/waybills", label: "תעודות משלוח", icon: Truck },
+  { path: "/partial-payment", label: "תשלום חלקי", icon: CreditCard },
+  { path: "/institution-tax", label: "חשבוניות למוסדות", icon: Building2 },
+  { path: "/sales-to-companies", label: "מכירות לחברות", icon: Building },
+  { path: "/expenses", label: "הוצאות", icon: Wallet },
+  { path: "/inventories", label: "מלאי", icon: Package },
+  { path: "/providers", label: "ספקים", icon: UserCircle },
+  { path: "/contacts", label: "אנשי קשר", icon: BookOpen },
+  { path: "/charts", label: "דוחות", icon: BarChart3 },
+  { path: "/settings", label: "הגדרות", icon: Settings },
 ];
 
 const mobileNav = [
-  { path: "/",         label: "בקרה",   icon: LayoutDashboard, exact: true },
-  { path: "/sales",    label: "מכירות", icon: ShoppingCart },
-  { path: "/charts",   label: "דוחות",  icon: BarChart3 },
+  { path: "/", label: "בקרה", icon: LayoutDashboard, exact: true },
+  { path: "/sales", label: "מכירות", icon: ShoppingCart },
+  { path: "/charts", label: "דוחות", icon: BarChart3 },
   { path: "/settings", label: "הגדרות", icon: Settings },
 ];
 
@@ -174,13 +174,13 @@ const GLOBAL_CSS = `
 `;
 
 export default function Layout() {
-  const bp       = useBreakpoint();
+  const bp = useBreakpoint();
   const isMobile = bp === "mobile";
   const isTablet = bp === "tablet";
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile && !isTablet);
   const { isDark, toggle: toggleDark } = useDarkMode();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { clearAuth } = useAuthStore();
   const { theme } = useTheme();
 
@@ -191,90 +191,90 @@ export default function Layout() {
   }, [bp]);
 
   const handleLogout = async () => {
-    try { await usersApi.logout(); } catch {}
+    try { await usersApi.logout(); } catch { }
     clearAuth(); navigate("/login");
     toast.success("התנתקת בהצלחה");
   };
 
   const showLabel = isMobile || (!isTablet && sidebarOpen);
-  const sidebarW  = isMobile ? "78vw" : isTablet ? 60 : sidebarOpen ? 244 : 60;
+  const sidebarW = isMobile ? "78vw" : isTablet ? 60 : sidebarOpen ? 244 : 60;
   const GOLD = "#c9a84c";
   const SB_BG = "linear-gradient(180deg,#111827 0%,#0f172a 100%)";
 
   return (
     <>
       <style>{GLOBAL_CSS}</style>
-      <div style={{ display:"flex", height:"100dvh", overflow:"hidden", background:"var(--page-bg)" }}>
+      <div style={{ display: "flex", height: "100dvh", overflow: "hidden", background: "var(--page-bg)" }}>
 
         {/* Overlay */}
         {isMobile && sidebarOpen && (
           <div onClick={() => setSidebarOpen(false)}
-            style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.6)", zIndex:40, backdropFilter:"blur(2px)" }} />
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 40, backdropFilter: "blur(2px)" }} />
         )}
 
         {/* ══ SIDEBAR ══ */}
         <aside style={{
           position: isMobile ? "fixed" : "relative",
           right: isMobile ? (sidebarOpen ? 0 : "-100%") : 0,
-          top:0, bottom:0, width:sidebarW, maxWidth:300, zIndex:50,
-          display:"flex", flexDirection:"column",
+          top: 0, bottom: 0, width: sidebarW, maxWidth: 300, zIndex: 50,
+          display: "flex", flexDirection: "column",
           background: SB_BG,
-          borderLeft:"1px solid rgba(255,255,255,0.05)",
+          borderLeft: "1px solid rgba(255,255,255,0.05)",
           transition: isMobile ? "right 0.26s ease" : "width 0.22s ease",
-          flexShrink:0, overflowX:"hidden",
+          flexShrink: 0, overflowX: "hidden",
         }}>
 
           {/* Logo */}
           <div style={{
-            display:"flex", alignItems:"center",
+            display: "flex", alignItems: "center",
             justifyContent: showLabel ? "space-between" : "center",
             padding: showLabel ? "16px 14px" : "16px 0",
-            borderBottom:"1px solid rgba(255,255,255,0.07)",
-            flexShrink:0, gap:8,
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            flexShrink: 0, gap: 8,
           }}>
             {showLabel ? (
-              <div style={{ display:"flex", alignItems:"center", gap:9, overflow:"hidden" }}>
-                <div style={{ width:34, height:34, borderRadius:9, background:GOLD, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  <Scissors size={16} color="#fff" />
+              <div style={{ display: "flex", alignItems: "center", gap: 9, overflow: "hidden" }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 34, height: 34, objectFit: "contain" }} />
                 </div>
-                <div style={{ overflow:"hidden" }}>
-                  <p style={{ color:"#fff", fontWeight:700, fontSize:13, margin:0, whiteSpace:"nowrap" }}>מתפרת רושאן</p>
-                  <p style={{ color:GOLD, fontSize:10, margin:0, opacity:0.85 }}>Roshan Tailoring</p>
+                <div style={{ overflow: "hidden" }}>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0, whiteSpace: "nowrap" }}>מתפרת רושאן</p>
+                  <p style={{ color: GOLD, fontSize: 10, margin: 0, opacity: 0.85 }}>Roshan Tailoring</p>
                 </div>
               </div>
             ) : (
-              <div style={{ width:34, height:34, borderRadius:9, background:GOLD, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <Scissors size={16} color="#fff" />
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 34, height: 34, objectFit: "contain" }} />
               </div>
             )}
             {!isTablet && (
               <button onClick={() => setSidebarOpen(o => !o)}
-                style={{ background:"transparent", border:"none", color:"rgba(255,255,255,0.4)", cursor:"pointer", padding:4, borderRadius:6, flexShrink:0, display:"flex" }}>
-                {(sidebarOpen || isMobile) ? <X size={17}/> : <Menu size={17}/>}
+                style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0, display: "flex" }}>
+                {(sidebarOpen || isMobile) ? <X size={17} /> : <Menu size={17} />}
               </button>
             )}
           </div>
 
           {/* Nav */}
-          <nav style={{ flex:1, overflowY:"auto", overflowX:"hidden", padding:"6px" }}>
-            {navItems.map(({ path, label, icon:Icon, exact }) => (
+          <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px" }}>
+            {navItems.map(({ path, label, icon: Icon, exact }) => (
               <NavLink key={path} to={path} end={exact} className="nav-tip"
                 style={({ isActive }) => ({
-                  display:"flex", alignItems:"center",
+                  display: "flex", alignItems: "center",
                   justifyContent: showLabel ? "flex-start" : "center",
-                  gap:10, padding: showLabel ? "9px 11px" : "11px 0",
-                  borderRadius:8, marginBottom:1, textDecoration:"none",
-                  position:"relative", whiteSpace:"nowrap", overflow:"hidden",
+                  gap: 10, padding: showLabel ? "9px 11px" : "11px 0",
+                  borderRadius: 8, marginBottom: 1, textDecoration: "none",
+                  position: "relative", whiteSpace: "nowrap", overflow: "hidden",
                   background: isActive ? "rgba(201,168,76,0.12)" : "transparent",
                   color: isActive ? "#fff" : "rgba(255,255,255,0.45)",
-                  transition:"background 0.12s",
+                  transition: "background 0.12s",
                 })}>
                 {({ isActive }) => (<>
                   {isActive && (
-                    <div style={{ position:"absolute", right:0, top:"50%", transform:"translateY(-50%)", width:3, height:22, background:GOLD, borderRadius:"4px 0 0 4px" }} />
+                    <div style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", width: 3, height: 22, background: GOLD, borderRadius: "4px 0 0 4px" }} />
                   )}
-                  <Icon size={16} style={{ flexShrink:0, color: isActive ? GOLD : "inherit", transition:"color 0.12s" }} />
-                  {showLabel && <span style={{ fontSize:13, fontWeight: isActive ? 600 : 400 }}>{label}</span>}
+                  <Icon size={16} style={{ flexShrink: 0, color: isActive ? GOLD : "inherit", transition: "color 0.12s" }} />
+                  {showLabel && <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 400 }}>{label}</span>}
                   {!showLabel && <span className="tip-label">{label}</span>}
                 </>)}
               </NavLink>
@@ -282,45 +282,43 @@ export default function Layout() {
           </nav>
 
           {/* Bottom — logout فقط */}
-          <div style={{ padding:"6px", borderTop:"1px solid rgba(255,255,255,0.07)", flexShrink:0 }}>
+          <div style={{ padding: "6px", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
             <button onClick={handleLogout}
               title={!showLabel ? "התנתק" : undefined}
-              style={{ display:"flex", alignItems:"center", justifyContent: showLabel ? "flex-start" : "center", gap:10, width:"100%", padding: showLabel ? "9px 11px" : "11px 0", borderRadius:8, background:"transparent", border:"none", color:"rgba(255,255,255,0.35)", cursor:"pointer" }}>
-              <LogOut size={15} style={{ flexShrink:0 }} />
-              {showLabel && <span style={{ fontSize:13 }}>התנתק</span>}
+              style={{ display: "flex", alignItems: "center", justifyContent: showLabel ? "flex-start" : "center", gap: 10, width: "100%", padding: showLabel ? "9px 11px" : "11px 0", borderRadius: 8, background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer" }}>
+              <LogOut size={15} style={{ flexShrink: 0 }} />
+              {showLabel && <span style={{ fontSize: 13 }}>התנתק</span>}
             </button>
           </div>
         </aside>
 
         {/* ══ MAIN ══ */}
         <main style={{
-          flex:1, overflowY:"auto", overflowX:"hidden",
-          display:"flex", flexDirection:"column",
-          minWidth:0, background:"var(--page-bg)",
+          flex: 1, overflowY: "auto", overflowX: "hidden",
+          display: "flex", flexDirection: "column",
+          minWidth: 0, background: "var(--page-bg)",
         }}>
 
           {/* Mobile top bar */}
           {isMobile && (
             <div style={{
-              display:"flex", alignItems:"center", justifyContent:"space-between",
-              padding:"11px 14px", flexShrink:0,
-              background:"var(--bg-card)",
-              borderBottom:"1px solid var(--border)",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "11px 14px", flexShrink: 0,
+              background: "var(--bg-card)",
+              borderBottom: "1px solid var(--border)",
             }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <div style={{ width:28, height:28, borderRadius:7, background:GOLD, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <Scissors size={13} color="#fff" />
-                </div>
-                <span style={{ fontWeight:700, fontSize:14, color:"var(--text-1)" }}>מתפרת רושאן</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 28, height: 28, objectFit: "contain" }} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-1)" }}>מתפרת רושאן</span>
               </div>
-              <div style={{ display:"flex", gap:4 }}>
+              <div style={{ display: "flex", gap: 4 }}>
                 <button onClick={toggleDark}
-                  style={{ background:"transparent", border:"none", cursor:"pointer", padding:6, borderRadius:6, display:"flex", color:"var(--text-3)" }}>
-                  {isDark ? <Sun size={18}/> : <Moon size={18}/>}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 6, display: "flex", color: "var(--text-3)" }}>
+                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
                 <button onClick={() => setSidebarOpen(true)}
-                  style={{ background:"transparent", border:"none", cursor:"pointer", padding:6, borderRadius:6, display:"flex", color:"var(--text-1)" }}>
-                  <Menu size={21}/>
+                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 6, display: "flex", color: "var(--text-1)" }}>
+                  <Menu size={21} />
                 </button>
               </div>
             </div>
@@ -328,10 +326,10 @@ export default function Layout() {
 
           {/* Page content */}
           <div style={{
-            flex:1,
+            flex: 1,
             padding: isMobile ? "12px" : isTablet ? "18px 20px" : "22px 28px",
             paddingBottom: isMobile ? "80px" : "22px",
-            boxSizing:"border-box",
+            boxSizing: "border-box",
           }}>
             <Outlet />
           </div>
@@ -340,27 +338,27 @@ export default function Layout() {
         {/* ══ MOBILE BOTTOM NAV ══ */}
         {isMobile && (
           <nav style={{
-            position:"fixed", bottom:0, left:0, right:0, zIndex:30,
-            background:"var(--bottom-bg)",
-            borderTop:"1px solid var(--bottom-border)",
-            display:"flex", alignItems:"stretch",
-            paddingBottom:"env(safe-area-inset-bottom)",
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30,
+            background: "var(--bottom-bg)",
+            borderTop: "1px solid var(--bottom-border)",
+            display: "flex", alignItems: "stretch",
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}>
-            {mobileNav.map(({ path, label, icon:Icon, exact }) => (
-              <NavLink key={path} to={path} end={exact} style={{ flex:1, textDecoration:"none" }}>
+            {mobileNav.map(({ path, label, icon: Icon, exact }) => (
+              <NavLink key={path} to={path} end={exact} style={{ flex: 1, textDecoration: "none" }}>
                 {({ isActive }) => (
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"8px 4px", gap:3 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px 4px", gap: 3 }}>
                     <Icon size={19} color={isActive ? theme.primary : "var(--text-4)"} />
-                    <span style={{ fontSize:10, fontWeight: isActive ? 600 : 400, color: isActive ? theme.primary : "var(--text-4)" }}>{label}</span>
-                    {isActive && <div style={{ width:18, height:2, borderRadius:2, background:theme.primary }} />}
+                    <span style={{ fontSize: 10, fontWeight: isActive ? 600 : 400, color: isActive ? theme.primary : "var(--text-4)" }}>{label}</span>
+                    {isActive && <div style={{ width: 18, height: 2, borderRadius: 2, background: theme.primary }} />}
                   </div>
                 )}
               </NavLink>
             ))}
             <button onClick={() => setSidebarOpen(true)}
-              style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:3, background:"transparent", border:"none", cursor:"pointer", padding:"8px 4px" }}>
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "transparent", border: "none", cursor: "pointer", padding: "8px 4px" }}>
               <Menu size={19} color="var(--text-4)" />
-              <span style={{ fontSize:10, color:"var(--text-4)" }}>תפריט</span>
+              <span style={{ fontSize: 10, color: "var(--text-4)" }}>תפריט</span>
             </button>
           </nav>
         )}
