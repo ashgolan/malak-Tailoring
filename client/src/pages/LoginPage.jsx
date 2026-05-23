@@ -102,19 +102,15 @@ export default function LoginPage() {
         </p>
 
         {/* A.Shaalan Tech signature */}
-        <div style={{ textAlign: "center", marginTop: 16, paddingBottom: 8 }}>
+        {/* A.Shaalan Tech signature */}
+        <div style={{ textAlign: "center", marginTop: 12 }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, letterSpacing: "0.06em" }}>
             פותח ועוצב על ידי
           </div>
           <img
             src="/logo-shaalan.png"
             alt="A.Shaalan Tech"
-            style={{
-              height: 80,  // ← كان 56
-              width: "auto",
-              display: "inline-block",
-              filter: "brightness(0.85)",
-            }}
+            style={{ height: 60, width: "auto", display: "inline-block", filter: "brightness(0.85)" }}
           />
         </div>
       </div>

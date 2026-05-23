@@ -3,19 +3,18 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const userControllers = {
+
   createUser: async (req, res) => {
     try {
       if (!req.body.key || req.body.key !== process.env.REACT_APP_ADMIN)
         throw new Error("לא הוכנס מפתח הוספת או שינוי נתונים");
-      if (req.body.role === "Admin") {
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(req.body.password, salt);
-        const user = await User.create({ ...req.body, password: hash, key: "unknown" });
-        if (!user) throw Error("שגיאה בהוספת הנתונים");
-        res.status(200).send(user.toJSON()); // ✅ كان: res.status(200).send(user)
-      } else {
+      if (req.body.role !== "Admin")
         throw Error("שגיאה בהוספת הנתונים");
-      }
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(req.body.password, salt);
+      const user = await User.create({ ...req.body, password: hash, key: "unknown" });
+      if (!user) throw Error("שגיאה בהוספת הנתונים");
+      res.status(200).send(user.toJSON());
     } catch (e) {
       res.status(400).send(e.message);
     }
@@ -23,7 +22,6 @@ export const userControllers = {
 
   getAllUsers: async (req, res) => {
     try {
-      // ✅ كان: User.find() — يُعيد كل شيء بما فيه password وtokens
       const users = await User.find().select("-password -tokens -key");
       res.status(200).send(users);
     } catch (e) {
@@ -35,14 +33,22 @@ export const userControllers = {
     try {
       if (!req.body.key || req.body.key !== process.env.REACT_APP_ADMIN)
         throw Error("לא הוכנס מפתח הוספת או שינוי נתונים");
-      const salt = bcrypt.genSaltSync(10);
-      const hash = bcrypt.hashSync(req.body.password, salt);
+
+      const updateData = { email: req.body.email };
+
+      // ✅ עדכן סיסמה רק אם הוזנה
+      if (req.body.password && req.body.password.trim().length >= 10) {
+        const salt = bcrypt.genSaltSync(10);
+        updateData.password = bcrypt.hashSync(req.body.password, salt);
+      }
+
       const user = await User.findByIdAndUpdate(
         { _id: req.body._id },
-        { $set: { ...req.body, password: hash } }
+        { $set: updateData },
+        { new: true }
       );
       if (!user) throw Error("שגיאה בשליפת הנתונים");
-      res.status(200).send(user);
+      res.status(200).send(user.toJSON());
     } catch (e) {
       res.status(400).send(e.message);
     }
@@ -93,16 +99,13 @@ export const userControllers = {
 
   refreshToken: async (req, res) => {
     try {
-      // ✅ يستخدم REFRESH_TOKEN_SECRET المنفصل
       const decoded = jwt.verify(
         req.body.refreshToken,
         process.env.REFRESH_TOKEN_SECRET
       );
-
       const user = await User.findById(decoded._id);
       if (!user) throw Error("User not found");
       if (user.isBlocked) throw Error("User is blocked");
-
       const tokens = await user.generateAuthToken();
       res.status(200).send(tokens);
     } catch (e) {
