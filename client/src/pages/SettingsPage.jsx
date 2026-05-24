@@ -13,10 +13,12 @@ function useDarkMode() {
     if (s !== null) return s === "true";
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
     localStorage.setItem("roshan-dark", isDark);
   }, [isDark]);
+
   useEffect(() => {
     const handler = () => {
       const s = localStorage.getItem("roshan-dark");
@@ -25,6 +27,21 @@ function useDarkMode() {
     window.addEventListener("roshan-theme-change", handler);
     return () => window.removeEventListener("roshan-theme-change", handler);
   }, []);
+
+  // ✅ تجاهل تغييرات النظام إذا اختار المستخدم يدوياً
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => {
+      const s = localStorage.getItem("roshan-dark");
+      if (s === null) {
+        setIsDark(mq.matches);
+        document.documentElement.setAttribute("data-theme", mq.matches ? "dark" : "light");
+      }
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   const toggle = () => {
     setIsDark(d => {
       const next = !d;
@@ -34,6 +51,7 @@ function useDarkMode() {
       return next;
     });
   };
+
   return { isDark, toggle };
 }
 
