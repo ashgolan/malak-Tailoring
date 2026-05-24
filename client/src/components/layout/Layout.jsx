@@ -10,54 +10,7 @@ import {
   Package, UserCircle, BookOpen, Settings, LogOut,
   Menu, X, Wallet, Building, Sun, Moon,
 } from "lucide-react";
-
-function useDarkMode() {
-  const [isDark, setIsDark] = useState(() => {
-    const s = localStorage.getItem("roshan-dark");
-    if (s !== null) return s === "true";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-    localStorage.setItem("roshan-dark", isDark);
-  }, [isDark]);
-
-  useEffect(() => {
-    const handler = () => {
-      const s = localStorage.getItem("roshan-dark");
-      setIsDark(s === "true");
-    };
-    window.addEventListener("roshan-theme-change", handler);
-    return () => window.removeEventListener("roshan-theme-change", handler);
-  }, []);
-
-  // ✅ تجاهل تغييرات النظام إذا اختار المستخدم يدوياً
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      const s = localStorage.getItem("roshan-dark");
-      if (s === null) {
-        setIsDark(mq.matches);
-        document.documentElement.setAttribute("data-theme", mq.matches ? "dark" : "light");
-      }
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  const toggle = () => {
-    setIsDark(d => {
-      const next = !d;
-      localStorage.setItem("roshan-dark", next);
-      document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
-      window.dispatchEvent(new Event("roshan-theme-change"));
-      return next;
-    });
-  };
-
-  return { isDark, toggle };
-}
+import { useDarkMode } from "../../context/DarkModeContext";
 
 function useBreakpoint() {
   const get = () => window.innerWidth < 768 ? "mobile" : window.innerWidth < 1024 ? "tablet" : "desktop";
