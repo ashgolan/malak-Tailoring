@@ -123,7 +123,7 @@ export default function EmergencyRestorePage() {
         <div style={{ textAlign:"center", marginBottom:32 }}>
           <div style={{ width:64, height:64, borderRadius:16, background:"linear-gradient(135deg,#ef4444,#dc2626)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, margin:"0 auto 16px" }}>🚨</div>
           <h1 style={{ fontSize:24, fontWeight:700, color:"#fff", margin:"0 0 6px" }}>שחזור חירום</h1>
-          <p style={{ fontSize:13, color:"rgba(255,255,255,0.5)", margin:0 }}>מתפרת רושאן — Emergency Restore</p>
+          <p style={{ fontSize:13, color:"rgba(255,255,255,0.5)", margin:0 }}>מתפרת מלאק — Emergency Restore</p>
         </div>
 
         {/* Step 1 - Key */}

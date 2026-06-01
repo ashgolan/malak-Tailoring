@@ -1,4 +1,4 @@
-// 🎨 Roshan Tailoring - Color Theme System
+// 🎨 Malak Tailoring - Color Theme System
 export const THEMES = {
   purple: {
     name: "סגול",

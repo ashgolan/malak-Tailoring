@@ -17,7 +17,7 @@ export default {
           900: "#701a75",
           950: "#4a044e",
         },
-        roshan: {
+        malak: {
           gold: "#C9A84C",
           dark: "#1a1a2e",
           navy: "#16213e",

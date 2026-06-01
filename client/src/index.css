@@ -333,9 +333,9 @@
 /* ══════════════════════════════════════════════════════════════
    BRANDING
    ══════════════════════════════════════════════════════════════ */
-.roshan-gold    { color: #c9a84c; }
-.roshan-gold-bg { background-color: #c9a84c; }
-.roshan-gradient{ background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+.malak-gold    { color: #c9a84c; }
+.malak-gold-bg { background-color: #c9a84c; }
+.malak-gradient{ background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
 
 /* ══════════════════════════════════════════════════════════════
    MOBILE

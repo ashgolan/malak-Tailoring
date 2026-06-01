@@ -1,7 +1,7 @@
 {
-  "name": "מתפרת רושאן",
-  "short_name": "מתפרת רושאן",
-  "description": "מערכת ניהול מתפרת רושאן",
+  "name": "מתפרת מלאק",
+  "short_name": "מתפרת מלאק",
+  "description": "מערכת ניהול מתפרת מלאק",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",

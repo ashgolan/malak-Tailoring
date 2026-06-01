@@ -4,20 +4,20 @@ const DarkModeContext = createContext();
 
 export function DarkModeProvider({ children }) {
   const [isDark, setIsDark] = useState(() => {
-    const s = localStorage.getItem("roshan-dark");
+    const s = localStorage.getItem("malak-dark");
     if (s !== null) return s === "true";
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-    localStorage.setItem("roshan-dark", isDark);
+    localStorage.setItem("malak-dark", isDark);
   }, [isDark]);
 
   const toggle = () => {
     setIsDark(d => {
       const next = !d;
-      localStorage.setItem("roshan-dark", next);
+      localStorage.setItem("malak-dark", next);
       document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
       return next;
     });

@@ -197,16 +197,16 @@ export default function Layout() {
             {showLabel ? (
               <div style={{ display: "flex", alignItems: "center", gap: 9, overflow: "hidden" }}>
                 <div style={{ width: 34, height: 34, borderRadius: 9, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 34, height: 34, objectFit: "contain" }} />
+                  <img src="/icons/icon-512.png" alt="מלאק" style={{ width: 34, height: 34, objectFit: "contain" }} />
                 </div>
                 <div style={{ overflow: "hidden" }}>
-                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0, whiteSpace: "nowrap" }}>מתפרת רושאן</p>
-                  <p style={{ color: GOLD, fontSize: 10, margin: 0, opacity: 0.85 }}>Roshan Tailoring</p>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0, whiteSpace: "nowrap" }}>מתפרת מלאק</p>
+                  <p style={{ color: GOLD, fontSize: 10, margin: 0, opacity: 0.85 }}>Malak Tailoring</p>
                 </div>
               </div>
             ) : (
               <div style={{ width: 34, height: 34, borderRadius: 9, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 34, height: 34, objectFit: "contain" }} />
+                <img src="/icons/icon-512.png" alt="מלאק" style={{ width: 34, height: 34, objectFit: "contain" }} />
               </div>
             )}
             {!isTablet && (
@@ -270,8 +270,8 @@ export default function Layout() {
               borderBottom: "1px solid var(--border)",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 28, height: 28, objectFit: "contain" }} />
-                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-1)" }}>מתפרת רושאן</span>
+                <img src="/icons/icon-512.png" alt="מלאק" style={{ width: 28, height: 28, objectFit: "contain" }} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-1)" }}>מתפרת מלאק</span>
               </div>
               <div style={{ display: "flex", gap: 4 }}>
                 <button onClick={toggleDark}

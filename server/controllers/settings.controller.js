@@ -22,7 +22,7 @@ export const getMySettings = async (req, res) => {
     if (!settings) {
       settings = await Setting.create({
         createdBy: req.user._id,
-        storeName: "מתפרת רושאן",
+        storeName: "מתפרת מלאק",
         maamValue: "17",
         masValue: "2.5",
       });
@@ -91,7 +91,7 @@ export const exportBackup = async (req, res) => {
   try {
     const zipBuffer = await createBackupZip();
     res.setHeader("Content-Type", "application/zip");
-    res.setHeader("Content-Disposition", `attachment; filename=roshan-backup-${new Date().toISOString().split("T")[0]}.zip`);
+    res.setHeader("Content-Disposition", `attachment; filename=malak-backup-${new Date().toISOString().split("T")[0]}.zip`);
     return res.status(200).send(zipBuffer);
   } catch (e) {
     return res.status(500).json({ message: e.message });

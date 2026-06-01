@@ -114,7 +114,7 @@ export default function ChartsPage() {
     const date = new Date().toLocaleDateString("he-IL");
     const logoHtml = settings?.logoBase64
       ? `<div style="text-align:center;margin-bottom:12px;"><img src="${settings.logoBase64}" style="width:60%;max-height:90px;object-fit:contain;" /></div>`
-      : `<div style="text-align:center;margin-bottom:12px;font-size:26px;font-weight:700;">${settings?.storeName || "מתפרת רושאן"}</div>`;
+      : `<div style="text-align:center;margin-bottom:12px;font-size:26px;font-weight:700;">${settings?.storeName || "מתפרת מלאק"}</div>`;
     const win = window.open("", "_blank");
     win.document.write(`<html dir="rtl"><head><title>${report.label} - דוח</title>
     <style>*{font-family:'Assistant',Arial,sans-serif;direction:rtl;}body{padding:16px;font-size:11px;}h1{font-size:16px;margin:0 0 4px;text-align:center;}.subtitle{font-size:10px;color:#6b7280;margin-bottom:12px;text-align:center;}.divider{border:none;border-top:2px solid #1f2937;margin:10px 0 12px;}table{width:100%;border-collapse:collapse;font-size:10px;}th{background:#1f2937;color:white;padding:5px 7px;text-align:right;font-weight:600;}td{padding:4px 7px;border-bottom:1px solid #f0f0ef;text-align:right;}tr:nth-child(even){background:#f9fafb;}.footer{margin-top:16px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #f0f0ef;padding-top:10px;}</style>

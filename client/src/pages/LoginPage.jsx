@@ -29,15 +29,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen roshan-gradient flex items-center justify-center p-4">
+    <div className="min-h-screen malak-gradient flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl shadow-2xl mb-4" style={{ background: "transparent" }}>
-            <img src="/icons/icon-512.png" alt="רושאן" style={{ width: 80, height: 80, objectFit: "contain" }} />
+            <img src="/icons/icon-512.png" alt="מלאק" style={{ width: 80, height: 80, objectFit: "contain" }} />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-1">מתפרת רושאן</h1>
-          <p className="text-white/50 text-sm">Roshan Tailoring Management</p>
+          <h1 className="text-3xl font-bold text-white mb-1">מתפרת מלאק</h1>
+          <p className="text-white/50 text-sm">Malak Tailoring Management</p>
         </div>
 
         {/* Form Card */}
@@ -82,7 +82,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full roshan-gold-bg hover:opacity-90 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-2"
+              className="w-full malak-gold-bg hover:opacity-90 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
         {/* Copyright App */}
         <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.35)" }}>
-          © {new Date().getFullYear()} מתפרת רושאן — כל הזכויות שמורות
+          © {new Date().getFullYear()} מתפרת מלאק — כל הזכויות שמורות
         </p>
 
         {/* A.Shaalan Tech signature */}

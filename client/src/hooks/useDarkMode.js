@@ -11,7 +11,7 @@
 
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "roshan-dark-mode";
+const STORAGE_KEY = "malak-dark-mode";
 
 function applyTheme(dark) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");

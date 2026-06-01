@@ -1,7 +1,7 @@
 {
-  "name": "roshan-tailoring",
+  "name": "malak-tailoring",
   "version": "1.0.0",
-  "description": "Roshan Tailoring Management System",
+  "description": "Malak Tailoring Management System",
   "scripts": {
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",

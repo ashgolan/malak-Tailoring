@@ -5,14 +5,14 @@ const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const [themeName, setThemeName] = useState(
-    () => localStorage.getItem("roshan-theme") || DEFAULT_THEME
+    () => localStorage.getItem("malak-theme") || DEFAULT_THEME
   );
 
   const theme = THEMES[themeName] || THEMES[DEFAULT_THEME];
 
   const setTheme = (name) => {
     setThemeName(name);
-    localStorage.setItem("roshan-theme", name);
+    localStorage.setItem("malak-theme", name);
   };
 
   return (

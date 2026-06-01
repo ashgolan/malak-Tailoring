@@ -355,7 +355,7 @@ export default function SettingsPage() {
         {/* ── עסק ── */}
         {activeTab === "business" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Field label="שם העסק"><input value={form.storeName} onChange={e => setForm(p => ({ ...p, storeName: e.target.value }))} placeholder="מתפרת רושאן" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
+            <Field label="שם העסק"><input value={form.storeName} onChange={e => setForm(p => ({ ...p, storeName: e.target.value }))} placeholder="מתפרת מלאק" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
             <Field label="טלפון"><input value={form.storePhone} onChange={e => setForm(p => ({ ...p, storePhone: e.target.value }))} placeholder="050-0000000" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
             <Field label="כתובת"><input value={form.storeAddress} onChange={e => setForm(p => ({ ...p, storeAddress: e.target.value }))} placeholder="רחוב, עיר" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
             <Field label="טקסט תחתון להדפסה" hint="יופיע בתחתית כל דוח">
@@ -475,7 +475,7 @@ export default function SettingsPage() {
       </div>
 
       <div style={{ textAlign: "center", padding: "16px", fontSize: 11, color: "var(--text-4)" }}>
-        מתפרת רושאן v2.0 · 2025
+        מתפרת מלאק v2.0 · 2025
       </div>
     </div>
   );

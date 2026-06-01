@@ -88,7 +88,7 @@ app.use((err, req, res, next) => {
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("✅ Connected to MongoDB - roshan-db");
+    console.log("✅ Connected to MongoDB - malak-db");
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       startBackupScheduler();

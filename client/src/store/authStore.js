@@ -18,7 +18,7 @@ export const useAuthStore = create(
       isAuthenticated: () => !!get().accessToken,
     }),
     {
-      name: "roshan-auth",
+      name: "malak-auth",
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,

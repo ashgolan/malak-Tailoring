@@ -42,7 +42,7 @@ export async function createBackupZip() {
   const meta = {
     createdAt: new Date().toISOString(),
     version: "2.0",
-    app: "מתפרת רושאן",
+    app: "מתפרת מלאק",
     collections: COLLECTIONS.map(c => c.name),
   };
   zip.addFile("meta.json", Buffer.from(JSON.stringify(meta, null, 2)));
@@ -110,18 +110,18 @@ export async function sendBackupEmail() {
     });
 
     await transporter.sendMail({
-      from: `"מתפרת רושאן - גיבוי" <${process.env.BACKUP_EMAIL_USER}>`,
+      from: `"מתפרת מלאק - גיבוי" <${process.env.BACKUP_EMAIL_USER}>`,
       to: process.env.BACKUP_EMAIL_TO || process.env.BACKUP_EMAIL_USER,
-      subject: `💾 גיבוי אוטומטי — מתפרת רושאן | ${date}`,
+      subject: `💾 גיבוי אוטומטי — מתפרת מלאק | ${date}`,
       html: `
         <div dir="rtl" style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:24px;">
-          <h2 style="color:#7c3aed;">✂️ מתפרת רושאן</h2>
+          <h2 style="color:#7c3aed;">✂️ מתפרת מלאק</h2>
           <p>גיבוי אוטומטי מתאריך ${date}</p>
           <p style="color:#6b7280;font-size:12px;">לשחזור: הגדרות ← שחזור גיבוי ← העלה את הקובץ המצורף</p>
         </div>
       `,
       attachments: [{
-        filename: `roshan-backup-${new Date().toISOString().split("T")[0]}.zip`,
+        filename: `malak-backup-${new Date().toISOString().split("T")[0]}.zip`,
         content: zipBuffer,
         contentType: "application/zip",
       }],
