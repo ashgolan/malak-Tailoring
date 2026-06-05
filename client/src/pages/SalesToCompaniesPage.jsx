@@ -1,7 +1,8 @@
 import { fmt, fo, bl, today } from "../utils/formatters.js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCrud } from "../hooks/useCrud";
-import { salesToCompaniesApi } from "../api";
+import { salesToCompaniesApi, settingsApi } from "../api";
 import { useTheme } from "../context/ThemeContext";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useStyles } from "../hooks/useStyles";
@@ -12,6 +13,7 @@ import AutocompleteInput from "../components/ui/AutocompleteInput.jsx";
 const EMPTY = { date: today(), clientName: "", name: "", kindOfWork: "", containersNumbers: "", sending: "", afterTax: "לא", number: 0, totalAmount: 0, colored: false };
 const DEFAULT_TRANSPORT = ["טורקית", "הודית", "סינית", "אירופאית", "מקומית"];
 const DEFAULT_SENDING = ["צפון", "מרכז", "דרום", "ירושלים", "שפלה"];
+
 const COLS = [
   { key: "totalAmount", label: "סה״כ", type: "money", width: "8%" },
   { key: "afterTax", label: "מע״מ", width: "6%" },
@@ -22,43 +24,132 @@ const COLS = [
   { key: "clientName", label: "חברה", width: "15%" },
   { key: "date", label: "תאריך", width: "9%" },
 ];
+
+// ─── List Manager Modal ────────────────────────────────────────
+function ListManagerModal({ isOpen, onClose, title, items, onSave, theme, S }) {
+  const [list, setList] = useState(items);
+  const [newItem, setNewItem] = useState("");
+
+  useEffect(() => { setList(items); }, [items]);
+
+  const handleAdd = () => {
+    const v = newItem.trim();
+    if (v && !list.includes(v)) { setList(p => [...p, v]); setNewItem(""); }
+  };
+  const handleRemove = (idx) => setList(p => p.filter((_, i) => i !== idx));
+  const handleSave = () => { onSave(list); onClose(); };
+
+  if (!isOpen) return null;
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000, padding: 16 }}>
+      <div style={{ background: "var(--bg-modal)", borderRadius: 16, width: "100%", maxWidth: 360, border: "1px solid var(--border)", boxShadow: "var(--shadow-modal)", direction: "rtl", padding: 24 }}>
+        <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text-1)" }}>⚙️ ניהול {title}</h3>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <input value={newItem} onChange={e => setNewItem(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleAdd())}
+            placeholder={`הוסף ${title}...`}
+            style={{ ...S.input, flex: 1 }}
+            onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+          <button onClick={handleAdd}
+            style={{ padding: "9px 14px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+</button>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflowY: "auto", marginBottom: 16 }}>
+          {list.map((item, idx) => (
+            <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--bg-card-alt)", borderRadius: 8, border: "1px solid var(--border-light)" }}>
+              <span style={{ fontSize: 13, color: "var(--text-1)" }}>{item}</span>
+              <button onClick={() => handleRemove(idx)}
+                style={{ background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 6, color: "#ef4444", cursor: "pointer", fontSize: 12, padding: "3px 8px" }}>🗑</button>
+            </div>
+          ))}
+          {list.length === 0 && <div style={{ textAlign: "center", color: "var(--text-4)", fontSize: 13, padding: 16 }}>אין פריטים</div>}
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onClose} style={S.btnCancel}>ביטול</button>
+          <button onClick={handleSave} style={S.btnSubmit(theme)}>שמור</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SalesToCompaniesPage() {
-  const { theme } = useTheme(); const isMobile = useIsMobile(); const S = useStyles(theme);
+  const { theme } = useTheme();
+  const isMobile = useIsMobile();
+  const S = useStyles(theme);
+  const qc = useQueryClient();
   const { data, isLoading, create, update, remove, toggleColor } = useCrud("salesToCompanies", salesToCompaniesApi);
-  const [modal, setModal] = useState(false); const [form, setForm] = useState(EMPTY);
-  const [search, setSearch] = useState(""); const [showAll, setShowAll] = useState(false);
-  const [editId, setEditId] = useState(null); const [editVals, setEditVals] = useState({});
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => settingsApi.get().then(r => r.data) });
+
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState(EMPTY);
+  const [search, setSearch] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [editVals, setEditVals] = useState({});
   const [transportOptions, setTransportOptions] = useState(DEFAULT_TRANSPORT);
   const [sendingOptions, setSendingOptions] = useState(DEFAULT_SENDING);
+  const [manageTransport, setManageTransport] = useState(false);
+  const [manageSending, setManageSending] = useState(false);
+
+  // ─── Load options from settings ───────────────────────────
+  useEffect(() => {
+    if (settings) {
+      if (settings.transportOptions?.length) setTransportOptions(settings.transportOptions);
+      if (settings.sendingOptions?.length) setSendingOptions(settings.sendingOptions);
+    }
+  }, [settings]);
+
+  // ─── Save options to settings ─────────────────────────────
+  const saveTransport = async (list) => {
+    setTransportOptions(list);
+    await settingsApi.update({ transportOptions: list });
+    qc.invalidateQueries(["settings"]);
+  };
+  const saveSending = async (list) => {
+    setSendingOptions(list);
+    await settingsApi.update({ sendingOptions: list });
+    qc.invalidateQueries(["settings"]);
+  };
+
   const currentYear = new Date().getFullYear();
   const allCompanies = [...new Set((data || []).map(i => i.clientName).filter(Boolean))].sort();
   const allWorks = [...new Set((data || []).map(i => i.name).filter(Boolean))].sort();
+
   const filtered = [...(data || [])].filter(item => {
     if (!showAll) { if (!item.date) return item.colored; if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false; }
     if (search) { const s = search.toLowerCase(); return ["clientName", "name", "kindOfWork", "sending"].some(f => String(item[f] || "").toLowerCase().includes(s)); }
     return true;
   }).sort((a, b) => a.date < b.date ? 1 : -1);
+
   const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
   const val = (k) => editId ? (editVals[k] ?? "") : form[k];
   const set = (k, v) => editId ? setEditVals(p => ({ ...p, [k]: v })) : setForm(p => ({ ...p, [k]: v }));
   const handleSubmit = (e) => { e.preventDefault(); if (editId) { update(editId, editVals); setEditId(null); } else create(form); setModal(false); setForm(EMPTY); };
   const mobileCols = COLS.map(col => col.key === "afterTax" ? { ...col, render: v => v === "כן" ? <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ מע״מ</span> : <span style={{ color: "var(--text-4)" }}>ללא</span> } : col);
+
   if (isLoading) return <div style={{ display: "flex", justifyContent: "center", padding: 80 }}><div className="rosh-spinner" style={{ borderTopColor: theme.primary }} /></div>;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, direction: "rtl" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: theme.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🏢</div>
-          <div><h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: "var(--text-1)" }}>מכירות לחברות</h1>
-            <p style={{ fontSize: 13, margin: "3px 0 0", color: "var(--text-4)" }}>{filtered.length} רשומות | סה״כ: <strong style={{ color: theme.primary }}>{fmt(total)} ₪</strong></p></div>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: "var(--text-1)" }}>מכירות לחברות</h1>
+            <p style={{ fontSize: 13, margin: "3px 0 0", color: "var(--text-4)" }}>{filtered.length} רשומות | סה״כ: <strong style={{ color: theme.primary }}>{fmt(total)} ₪</strong></p>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button style={S.toggleBtn(showAll, theme)} onClick={() => setShowAll(!showAll)}>{showAll ? "שנה נוכחית" : "כל הזמנים"}</button>
           <button onClick={() => setModal(true)} style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ הוסף</button>
         </div>
       </div>
+
       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי חברה, עבודה, הובלה..." style={S.inputLg} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
-      {isMobile ? (<MobileCards items={filtered} columns={mobileCols} onEdit={item => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }} onDelete={id => remove(id)} onToggleColor={toggleColor} total={total} theme={theme} />) : (
+
+      {isMobile ? (
+        <MobileCards items={filtered} columns={mobileCols} onEdit={item => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }} onDelete={id => remove(id)} onToggleColor={toggleColor} total={total} theme={theme} />
+      ) : (
         <div style={S.card}>
           <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", width: "100%", background: theme.gradient, color: "#fff" }}>
             <div style={{ width: 70, minWidth: 70, padding: "12px 8px", fontSize: 12, fontWeight: 700, textAlign: "center", flexShrink: 0 }}>פעולות</div>
@@ -67,7 +158,8 @@ export default function SalesToCompaniesPage() {
           </div>
           {filtered.length === 0 ? <div style={S.empty}><div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div><div>אין נתונים</div></div>
             : filtered.map((item, idx) => {
-              const isEditing = editId === item._id; return (
+              const isEditing = editId === item._id;
+              return (
                 <div key={item._id} style={S.row(item.colored, idx)}
                   onMouseEnter={e => { if (!item.colored) e.currentTarget.style.background = "var(--bg-hover)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = item.colored ? "var(--colored-bg)" : idx % 2 === 0 ? "var(--bg-card)" : "var(--bg-card-alt)"; }}>
@@ -85,26 +177,62 @@ export default function SalesToCompaniesPage() {
                 </div>
               );
             })}
-          {filtered.length > 0 && (<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "var(--bg-hover)", borderTop: `2px solid ${theme.primaryBorder}` }}><span style={{ fontSize: 13, color: "var(--text-3)" }}>סה״כ ({filtered.length})</span><span style={{ fontSize: 16, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span></div>)}
+          {filtered.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "var(--bg-hover)", borderTop: `2px solid ${theme.primaryBorder}` }}>
+              <span style={{ fontSize: 13, color: "var(--text-3)" }}>סה״כ ({filtered.length})</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Add/Edit Modal */}
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת מכירה" : "הוספת מכירה לחברה"} size="lg">
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={S.label}>תאריך</label><input type="date" value={val("date")} onChange={e => set("date", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
             <div>
               <label style={S.label}>חברה</label>
-              <AutocompleteInput value={val("clientName")} onChange={e => set("clientName", e.target.value)}
-                suggestions={allCompanies} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+              <AutocompleteInput value={val("clientName")} onChange={e => set("clientName", e.target.value)} suggestions={allCompanies} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
             <div>
               <label style={S.label}>עבודה</label>
-              <AutocompleteInput value={val("name")} onChange={e => set("name", e.target.value)}
-                suggestions={allWorks} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
-            </div>            <div><label style={S.label}>מס׳ קונטינר</label><input type="text" value={val("containersNumbers")} onChange={e => set("containersNumbers", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
-            <div><label style={S.label}>סוג הובלה</label><select value={val("kindOfWork")} onChange={e => set("kindOfWork", e.target.value)} style={S.select}><option value="">בחר...</option>{transportOptions.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-            <div><label style={S.label}>משלוח</label><select value={val("sending")} onChange={e => set("sending", e.target.value)} style={S.select}><option value="">בחר...</option>{sendingOptions.map(o => <option key={o} value={o}>{o}</option>)}</select></div>
-            <div><label style={S.label}>סכום / סה״כ</label><input type="number" min="0" value={val("totalAmount")} onChange={e => { set("totalAmount", e.target.value); set("number", e.target.value); }} style={{ ...S.input, fontWeight: 700, color: theme.primary }} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>            <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>
+              <AutocompleteInput value={val("name")} onChange={e => set("name", e.target.value)} suggestions={allWorks} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+            <div><label style={S.label}>מס׳ קונטינר</label><input type="text" value={val("containersNumbers")} onChange={e => set("containersNumbers", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+
+            {/* סוג הובלה */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <label style={{ ...S.label, marginBottom: 0 }}>סוג הובלה</label>
+                <button type="button" onClick={() => setManageTransport(true)}
+                  style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-tag)", color: "var(--text-3)", cursor: "pointer", fontFamily: "inherit" }}>
+                  ⚙️ ניהול
+                </button>
+              </div>
+              <select value={val("kindOfWork")} onChange={e => set("kindOfWork", e.target.value)} style={S.select}>
+                <option value="">בחר...</option>
+                {transportOptions.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+
+            {/* משלוח */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <label style={{ ...S.label, marginBottom: 0 }}>משלוח</label>
+                <button type="button" onClick={() => setManageSending(true)}
+                  style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-tag)", color: "var(--text-3)", cursor: "pointer", fontFamily: "inherit" }}>
+                  ⚙️ ניהול
+                </button>
+              </div>
+              <select value={val("sending")} onChange={e => set("sending", e.target.value)} style={S.select}>
+                <option value="">בחר...</option>
+                {sendingOptions.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+
+            <div><label style={S.label}>סכום / סה״כ</label><input type="number" min="0" value={val("totalAmount")} onChange={e => { set("totalAmount", e.target.value); set("number", e.target.value); }} style={{ ...S.input, fontWeight: 700, color: theme.primary }} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>
               <div style={{ position: "relative", width: 36, height: 20 }}>
                 <div onClick={() => set("afterTax", val("afterTax") === "כן" ? "לא" : "כן")} style={{ position: "absolute", inset: 0, borderRadius: 20, cursor: "pointer", transition: "0.2s", background: val("afterTax") === "כן" ? theme.primary : "var(--border)" }}>
                   <div style={{ position: "absolute", top: 2, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "0.2s", right: val("afterTax") === "כן" ? 2 : 18 }} />
@@ -113,9 +241,18 @@ export default function SalesToCompaniesPage() {
               <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>{val("afterTax") === "כן" ? "✓ כולל מע״מ" : "ללא מע״מ"}</label>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10 }}><button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={S.btnCancel}>ביטול</button><button type="submit" style={S.btnSubmit(theme)}>שמור</button></div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={S.btnCancel}>ביטול</button>
+            <button type="submit" style={S.btnSubmit(theme)}>שמור</button>
+          </div>
         </form>
       </Modal>
+
+      {/* List Manager Modals */}
+      <ListManagerModal isOpen={manageTransport} onClose={() => setManageTransport(false)}
+        title="סוג הובלה" items={transportOptions} onSave={saveTransport} theme={theme} S={S} />
+      <ListManagerModal isOpen={manageSending} onClose={() => setManageSending(false)}
+        title="משלוח" items={sendingOptions} onSave={saveSending} theme={theme} S={S} />
     </div>
   );
 }

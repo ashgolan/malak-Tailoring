@@ -8,4 +8,5 @@ institutionTaxRouter.get("/", auth, getAll);
 institutionTaxRouter.get("/:id", auth, getOne);
 institutionTaxRouter.post("/", auth, create);
 institutionTaxRouter.put("/:id", auth, update);
+institutionTaxRouter.patch("/:id", auth, update);
 institutionTaxRouter.delete("/:id", auth, remove);

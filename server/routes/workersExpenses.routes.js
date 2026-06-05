@@ -8,4 +8,5 @@ workersExpensesRouter.get("/", auth, getAll);
 workersExpensesRouter.get("/:id", auth, getOne);
 workersExpensesRouter.post("/", auth, create);
 workersExpensesRouter.put("/:id", auth, update);
+workersExpensesRouter.patch("/:id", auth, update);
 workersExpensesRouter.delete("/:id", auth, remove);

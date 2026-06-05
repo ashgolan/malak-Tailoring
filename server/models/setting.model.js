@@ -7,8 +7,12 @@ const settingSchema = new Schema({
   storeAddress: { type: String, default: "" },
   footerText: { type: String, default: "" },
   logoBase64: { type: String, default: "" },
+  logoUrl: { type: String, default: "" },
+  bidFooter: { type: String, default: "" },
   maamValue: { type: String, default: "17" },
   masValue: { type: String, default: "2.5" },
+  transportOptions: { type: [String], default: ["טורקית", "הודית", "סינית", "אירופאית", "מקומית"] },
+  sendingOptions: { type: [String], default: ["צפון", "מרכז", "דרום", "ירושלים", "שפלה"] },
 }, { timestamps: true });
 
 export const Setting = model("Setting", settingSchema);

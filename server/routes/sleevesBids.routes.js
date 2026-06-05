@@ -8,4 +8,5 @@ sleevesBidsRouter.get("/", auth, getAll);
 sleevesBidsRouter.get("/:id", auth, getOne);
 sleevesBidsRouter.post("/", auth, create);
 sleevesBidsRouter.put("/:id", auth, update);
+sleevesBidsRouter.patch("/:id", auth, update);
 sleevesBidsRouter.delete("/:id", auth, remove);

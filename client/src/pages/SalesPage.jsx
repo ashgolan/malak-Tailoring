@@ -25,6 +25,41 @@ const COLS = [
   { key: "date", label: "תאריך", type: "date", width: "9%" },
 ];
 
+// ─── Pulse animation style ─────────────────────────────────────
+const pulseKeyframes = `
+@keyframes pulse-red {
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); opacity: 1; }
+  50%  { box-shadow: 0 0 0 6px rgba(239,68,68,0); opacity: 0.6; }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); opacity: 1; }
+}
+`;
+
+// ─── Dot component with pulse ──────────────────────────────────
+function ColorDot({ colored, onClick }) {
+  return (
+    <>
+      <style>{pulseKeyframes}</style>
+      <div
+        onClick={onClick}
+        title={colored ? "לחץ לביטול הסימון" : "לחץ לסימון כלא שולם"}
+        style={{
+          width: 13,
+          height: 13,
+          borderRadius: "50%",
+          background: colored ? "#ef4444" : "var(--border)",
+          border: colored ? "2px solid #dc2626" : "2px solid var(--border)",
+          cursor: "pointer",
+          transition: "background 0.3s, transform 0.2s",
+          animation: colored ? "pulse-red 1.6s ease-in-out infinite" : "none",
+          flexShrink: 0,
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.3)"; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+      />
+    </>
+  );
+}
+
 // ─── Client Autocomplete ───────────────────────────────────────
 function ClientAutocomplete({ value, onChange, allClients, accent }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -40,8 +75,7 @@ function ClientAutocomplete({ value, onChange, allClients, accent }) {
   return (
     <div style={{ position: "relative" }} ref={ref}>
       <input type="text" value={value} onChange={handleInput} onFocus={handleFocus} required placeholder="שם הלקוח"
-        style={{ width: "100%", padding: "9px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit", color: "var(--text-1)", transition: "border-color 0.15s" }}
-        onFocus2={e => fo(e, accent)} />
+        style={{ width: "100%", padding: "9px 12px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit", color: "var(--text-1)", transition: "border-color 0.15s" }} />
       {showList && suggestions.length > 0 && (
         <div style={{ position: "absolute", top: "100%", right: 0, left: 0, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8, boxShadow: "var(--shadow-modal)", zIndex: 100, maxHeight: 180, overflowY: "auto", marginTop: 2 }}>
           {suggestions.map((c, i) => (
@@ -87,7 +121,6 @@ export default function SalesPage() {
   const allClients = [...new Set((data || []).map(s => s.clientName).filter(Boolean))].sort();
   const allNames = [...new Set((data || []).map(s => s.name).filter(Boolean))].sort();
 
-  // Auto-calculate totals on field change
   const setField = (key, val) => {
     setForm(prev => {
       const u = { ...prev, [key]: val };
@@ -208,14 +241,14 @@ export default function SalesPage() {
                       col.type === "boolean"
                         ? (item[col.key] ? <span style={{ color: "#16a34a", fontWeight: 600, fontSize: 11 }}>✓ מע״מ</span> : <span style={{ color: "var(--text-4)", fontSize: 11 }}>ללא</span>)
                         : col.type === "number" ? fmt(item[col.key])
-                          : (item[col.key] || "-")
+                          : String(item[col.key] || "-")
                     )}
                   </div>
                 ))}
 
-                {/* Color dot */}
-                <div style={{ width: 30, minWidth: 30, display: "flex", justifyContent: "center", flexShrink: 0 }}>
-                  <div onClick={() => toggleColor(item._id, { colored: !item.colored })} style={S.dot(item.colored)} />
+                {/* Color dot with pulse */}
+                <div style={{ width: 30, minWidth: 30, display: "flex", justifyContent: "center", alignItems: "center", flexShrink: 0 }}>
+                  <ColorDot colored={item.colored} onClick={() => toggleColor(item._id, { colored: !item.colored })} />
                 </div>
               </div>
             );

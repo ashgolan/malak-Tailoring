@@ -8,4 +8,5 @@ expensesRouter.get("/", auth, getAll);
 expensesRouter.get("/:id", auth, getOne);
 expensesRouter.post("/", auth, create);
 expensesRouter.put("/:id", auth, update);
+expensesRouter.patch("/:id", auth, update);
 expensesRouter.delete("/:id", auth, remove);

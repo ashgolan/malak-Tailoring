@@ -8,4 +8,5 @@ partialPaymentRouter.get("/", auth, getAll);
 partialPaymentRouter.get("/:id", auth, getOne);
 partialPaymentRouter.post("/", auth, create);
 partialPaymentRouter.put("/:id", auth, update);
+partialPaymentRouter.patch("/:id", auth, update);
 partialPaymentRouter.delete("/:id", auth, remove);

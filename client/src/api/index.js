@@ -8,14 +8,12 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Request interceptor - add token
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = token;
   return config;
 });
 
-// Response interceptor - handle 401
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -40,16 +38,15 @@ api.interceptors.response.use(
   }
 );
 
-// Generic CRUD factory
 export const createApiService = (endpoint) => ({
   getAll: () => api.get(`/${endpoint}`),
   getOne: (id) => api.get(`/${endpoint}/${id}`),
   create: (data) => api.post(`/${endpoint}`, data),
   update: (id, data) => api.put(`/${endpoint}/${id}`, data),
+  patch:  (id, data) => api.patch(`/${endpoint}/${id}`, data),
   remove: (id) => api.delete(`/${endpoint}/${id}`),
 });
 
-// All services
 export const salesApi            = createApiService("sales");
 export const bouncedChecksApi    = createApiService("bouncedChecks");
 export const workersExpensesApi  = createApiService("workersExpenses");
@@ -75,9 +72,15 @@ export const settingsApi = {
   get: () => api.get("/settings"),
   update: (data) => api.put("/settings", data),
   updateSecurity: (data) => api.put("/settings/security", data),
-  // ✅ تغيير — responseType arraybuffer لاستقبال ملف ZIP
   backup: () => api.get("/settings/backup", { responseType: "arraybuffer" }),
   sendBackup: () => api.post("/settings/send-backup"),
+  uploadLogo: (file) => {
+    const formData = new FormData();
+    formData.append("logo", file);
+    return api.post("/settings/upload-logo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 };
 
 export const usersApi = {

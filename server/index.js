@@ -1,11 +1,15 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import helmet from "helmet";           // ← جديد
+import helmet from "helmet";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
 
-import { apiLimiter } from "./middleware/rateLimiter.js"; // من الخطوة 2
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+import { apiLimiter } from "./middleware/rateLimiter.js";
 import { userRouter } from "./routes/user.routes.js";
 import { salesRouter } from "./routes/sales.routes.js";
 import { bouncedChecksRouter } from "./routes/bouncedChecks.routes.js";
@@ -30,18 +34,13 @@ import { startBackupScheduler } from "./services/backupScheduler.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Helmet — 11 header أمني تلقائياً
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
-// ✅ CORS محدد — بدل "*"
 const allowedOrigins = (process.env.ALLOWED_ORIGIN || "")
-  .split(",")
-  .map(o => o.trim())
-  .filter(Boolean);
+  .split(",").map(o => o.trim()).filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // السماح لطلبات بدون origin (Postman، mobile apps)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin غير مسموح به — ${origin}`));
@@ -49,10 +48,11 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: "2mb" })); // ✅ حد حجم الـ body
-
-// ✅ Rate limiting من الخطوة 2
+app.use(express.json({ limit: "5mb" }));
 app.use("/api", apiLimiter);
+
+// ✅ Serve uploaded logos statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
 app.use("/api/users", userRouter);
@@ -75,18 +75,13 @@ app.use("/api/events", eventsRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/emergency", restoreRouter);
 
-// ✅ Global error handler — لا يكشف stack traces للمستخدم
 app.use((err, req, res, next) => {
   const status = err.status || 500;
-  const message = process.env.NODE_ENV === "production"
-    ? "حدث خطأ في السيرفر"
-    : err.message;
+  const message = process.env.NODE_ENV === "production" ? "חדث خطأ في السيرفر" : err.message;
   res.status(status).json({ error: message });
 });
 
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB - malak-db");
     app.listen(PORT, () => {

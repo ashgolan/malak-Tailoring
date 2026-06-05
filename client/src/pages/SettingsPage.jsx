@@ -23,7 +23,6 @@ const btnPrimary = (bg) => ({
   display: "flex", alignItems: "center", gap: 8,
 });
 
-// ── SVG Icons ──────────────────────────────────────────────────
 const Icons = {
   save: <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 2h9l3 3v9a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.3" /><path d="M5 1v4h6V1M4 9h8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
   backup: <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
@@ -34,7 +33,8 @@ const Icons = {
   percent: <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="4.5" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.3" /><circle cx="11.5" cy="11.5" r="2" stroke="currentColor" strokeWidth="1.3" /><path d="M3 13L13 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
 };
 
-// ── Field ──────────────────────────────────────────────────────
+const getBase = () => import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+
 function Field({ label, hint, children }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -45,7 +45,6 @@ function Field({ label, hint, children }) {
   );
 }
 
-// ── Password ───────────────────────────────────────────────────
 function PasswordField({ label, value, onChange, placeholder }) {
   const [show, setShow] = useState(false);
   return (
@@ -64,9 +63,6 @@ function PasswordField({ label, value, onChange, placeholder }) {
   );
 }
 
-// ── Users ──────────────────────────────────────────────────────
-// ── Users ──────────────────────────────────────────────────────
-// ضع هذا المكون بدل UsersList الموجود في SettingsPage.jsx
 function UsersList({ theme }) {
   const { user: currentUser } = useAuthStore();
   const OWNER_EMAIL = "alaa.t.shaalan@gmail.com";
@@ -182,7 +178,6 @@ function UsersList({ theme }) {
           </div>
         );
       })}
-
       {!showAdd ? (
         <button onClick={() => setShowAdd(true)} style={{ padding: "10px", background: theme.gradient, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
           + הוסף משתמש
@@ -206,9 +201,6 @@ function UsersList({ theme }) {
   );
 }
 
-
-
-// ── TABS CONFIG ────────────────────────────────────────────────
 const TABS = [
   { key: "appearance", label: "מראה", icon: "🎨" },
   { key: "business", label: "עסק", icon: "🏪" },
@@ -218,7 +210,6 @@ const TABS = [
   { key: "security", label: "אבטחה", icon: "🔒" },
 ];
 
-// ══ MAIN ══════════════════════════════════════════════════════
 export default function SettingsPage() {
   const { theme, themeName, setTheme } = useTheme();
   const { isDark, toggle: toggleDark } = useDarkMode();
@@ -230,49 +221,111 @@ export default function SettingsPage() {
   const [restoring, setRestoring] = useState(false);
   const [sendingBackup, setSendingBackup] = useState(false);
   const [logoPreview, setLogoPreview] = useState("");
-  const [form, setForm] = useState({ storeName: "", storePhone: "", storeAddress: "", footerText: "", maamValue: "17", masValue: "2.5" });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [form, setForm] = useState({
+    storeName: "", storePhone: "", storeAddress: "",
+    footerText: "", bidFooter: "",
+    maamValue: "17", masValue: "2.5"
+  });
   const [secForm, setSecForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const { user: currentUser } = useAuthStore();
 
-  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => settingsApi.get().then(r => r.data) });
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.get().then(r => r.data)
+  });
 
   useEffect(() => {
     if (settings) {
-      setForm({ storeName: settings.storeName || "", storePhone: settings.storePhone || "", storeAddress: settings.storeAddress || "", footerText: settings.footerText || "", maamValue: String(settings.maamValue || 17), masValue: String(settings.masValue || 2.5) });
-      setLogoPreview(settings.logoBase64 || "");
+      setForm({
+        storeName: settings.storeName || "",
+        storePhone: settings.storePhone || "",
+        storeAddress: settings.storeAddress || "",
+        footerText: settings.footerText || "",
+        bidFooter: settings.bidFooter || "",
+        maamValue: String(settings.maamValue || 17),
+        masValue: String(settings.masValue || 2.5),
+      });
+      // Build full logo URL
+      if (settings.logoUrl) {
+        setLogoPreview(`${getBase()}${settings.logoUrl}`);
+      } else if (settings.logoBase64) {
+        setLogoPreview(settings.logoBase64);
+      } else {
+        setLogoPreview("");
+      }
     }
   }, [settings]);
 
-  const saveMut = useMutation({ mutationFn: (d) => settingsApi.update(d), onSuccess: () => { toast.success("נשמר ✓"); qc.invalidateQueries(["settings"]); qc.invalidateQueries(["taxValues"]); }, onError: (e) => toast.error(e.response?.data?.message || "שגיאה") });
-  const secMut = useMutation({ mutationFn: (d) => settingsApi.updateSecurity(d), onSuccess: () => { toast.success("הסיסמה עודכנה ✓"); setSecForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); }, onError: (e) => toast.error(e.response?.data?.message || "שגיאה") });
+  const saveMut = useMutation({
+    mutationFn: (d) => settingsApi.update(d),
+    onSuccess: () => { toast.success("נשמר ✓"); qc.invalidateQueries(["settings"]); qc.invalidateQueries(["taxValues"]); },
+    onError: (e) => toast.error(e.response?.data?.message || "שגיאה")
+  });
 
-  const handleSave = () => saveMut.mutate({ ...form, logoBase64: logoPreview });
+  const secMut = useMutation({
+    mutationFn: (d) => settingsApi.updateSecurity(d),
+    onSuccess: () => { toast.success("הסיסמה עודכנה ✓"); setSecForm({ currentPassword: "", newPassword: "", confirmPassword: "" }); },
+    onError: (e) => toast.error(e.response?.data?.message || "שגיאה")
+  });
+
+  const handleSave = () => saveMut.mutate({ ...form });
+
   const handleSecurity = () => {
     if (secForm.newPassword !== secForm.confirmPassword) { toast.error("הסיסמאות אינן תואמות"); return; }
     secMut.mutate({ currentPassword: secForm.currentPassword, newPassword: secForm.newPassword });
   };
-  const handleLogoUpload = (e) => {
+
+  const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0]; if (!file) return;
-    if (file.size > 500 * 1024) { toast.error("הקובץ גדול מדי (מקסימום 500KB)"); return; }
-    const reader = new FileReader(); reader.onload = (ev) => setLogoPreview(ev.target.result); reader.readAsDataURL(file);
+    if (file.size > 1024 * 1024) { toast.error("הקובץ גדול מדי (מקסימום 1MB)"); return; }
+    setUploadingLogo(true);
+    try {
+      const res = await settingsApi.uploadLogo(file);
+      const logoUrl = res.data.logoUrl; // e.g. /uploads/logos/logo_xxx.jpg
+      setLogoPreview(`${getBase()}${logoUrl}`);
+      // Save logoUrl in settings
+      await settingsApi.update({ ...form, logoUrl });
+      toast.success("הלוגו הועלה ✓");
+      qc.invalidateQueries(["settings"]);
+    } catch (err) {
+      console.error(err);
+      toast.error("שגיאה בהעלאת הלוגו");
+    } finally {
+      setUploadingLogo(false);
+    }
   };
+
+  const handleRemoveLogo = async () => {
+    setLogoPreview("");
+    await settingsApi.update({ ...form, logoBase64: "", logoUrl: "" });
+    qc.invalidateQueries(["settings"]);
+    toast.success("הלוגו הוסר ✓");
+  };
+
   const handleBackup = async () => {
-    try { const res = await settingsApi.backup(); const blob = new Blob([res.data], { type: "application/zip" }); const url = window.URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `backup_${Date.now()}.zip`; a.click(); window.URL.revokeObjectURL(url); toast.success("הגיבוי הורד ✓"); }
-    catch { toast.error("שגיאה בגיבוי"); }
+    try {
+      const res = await settingsApi.backup();
+      const blob = new Blob([res.data], { type: "application/zip" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = `backup_${Date.now()}.zip`; a.click();
+      window.URL.revokeObjectURL(url); toast.success("הגיבוי הורד ✓");
+    } catch { toast.error("שגיאה בגיבוי"); }
   };
+
   const handleRestore = async () => {
     if (!restoreFile) return;
     if (!window.confirm("⚠️ האם אתה בטוח? הנתונים יתווספו לבסיס הנתונים הקיים.")) return;
     setRestoring(true);
-    try { const text = await restoreFile.text(); const json = JSON.parse(text); await settingsApi.restore(json); toast.success("השחזור הושלם ✓"); qc.invalidateQueries(); }
-    catch { toast.error("שגיאה בשחזור"); }
+    try {
+      const text = await restoreFile.text(); const json = JSON.parse(text);
+      await settingsApi.restore(json); toast.success("השחזור הושלם ✓"); qc.invalidateQueries();
+    } catch { toast.error("שגיאה בשחזור"); }
     finally { setRestoring(false); setRestoreFile(null); }
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0, direction: "rtl", maxWidth: 680, margin: "0 auto" }}>
-
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", margin: 0 }}>הגדרות</h1>
@@ -281,46 +334,26 @@ export default function SettingsPage() {
         <div style={{ width: 42, height: 42, borderRadius: 11, background: theme.gradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>⚙️</div>
       </div>
 
-      {/* Tabs */}
       <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 2, marginBottom: 20, scrollbarWidth: "none" }}>
         {TABS.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "9px 16px", borderRadius: 10, border: "none",
-              cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-              fontSize: 13, fontWeight: activeTab === tab.key ? 700 : 500,
-              transition: "all 0.15s", flexShrink: 0,
-              background: activeTab === tab.key ? theme.primary : "var(--bg-card)",
-              color: activeTab === tab.key ? "#fff" : "var(--text-3)",
-              boxShadow: activeTab === tab.key ? `0 2px 8px ${theme.primary}40` : "none",
-              border: activeTab === tab.key ? "none" : "1px solid var(--border)",
-            }}>
-            <span>{tab.icon}</span>
-            <span>{tab.label}</span>
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 16px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", fontSize: 13, fontWeight: activeTab === tab.key ? 700 : 500, transition: "all 0.15s", flexShrink: 0, background: activeTab === tab.key ? theme.primary : "var(--bg-card)", color: activeTab === tab.key ? "#fff" : "var(--text-3)", boxShadow: activeTab === tab.key ? `0 2px 8px ${theme.primary}40` : "none", border: activeTab === tab.key ? "none" : "1px solid var(--border)" }}>
+            <span>{tab.icon}</span><span>{tab.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
       <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", padding: "24px", boxShadow: "var(--shadow-card)" }}>
 
         {/* ── מראה ── */}
         {activeTab === "appearance" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {/* Dark mode */}
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)", marginBottom: 12 }}>מצב תצוגה</div>
               <div style={{ display: "flex", gap: 10 }}>
                 {[{ v: false, label: "מצב יום", icon: <Sun size={18} color="#f59e0b" /> }, { v: true, label: "מצב לילה", icon: <Moon size={18} color="#818cf8" /> }].map(opt => (
                   <button key={String(opt.v)} onClick={() => { if (isDark !== opt.v) toggleDark(); }}
-                    style={{
-                      flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-                      padding: "16px 12px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit",
-                      transition: "all 0.15s",
-                      border: `2px solid ${isDark === opt.v ? theme.primary : "var(--border)"}`,
-                      background: isDark === opt.v ? theme.primaryLight : "var(--bg-card-alt)",
-                    }}>
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 12px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", border: `2px solid ${isDark === opt.v ? theme.primary : "var(--border)"}`, background: isDark === opt.v ? theme.primaryLight : "var(--bg-card-alt)" }}>
                     {opt.icon}
                     <span style={{ fontSize: 13, fontWeight: isDark === opt.v ? 700 : 400, color: isDark === opt.v ? theme.primary : "var(--text-2)" }}>{opt.label}</span>
                     {isDark === opt.v && <span style={{ fontSize: 10, color: theme.primary }}>✓ פעיל</span>}
@@ -328,20 +361,12 @@ export default function SettingsPage() {
                 ))}
               </div>
             </div>
-
-            {/* Theme */}
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)", marginBottom: 12 }}>ערכת צבעים</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                 {Object.entries(THEMES).map(([key, t]) => (
                   <button key={key} onClick={() => setTheme(key)}
-                    style={{
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-                      padding: "14px 8px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit",
-                      transition: "all 0.15s",
-                      border: `2px solid ${themeName === key ? t.primary : "var(--border)"}`,
-                      background: themeName === key ? t.primaryLight : "var(--bg-card-alt)",
-                    }}>
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "14px 8px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", border: `2px solid ${themeName === key ? t.primary : "var(--border)"}`, background: themeName === key ? t.primaryLight : "var(--bg-card-alt)" }}>
                     <div style={{ width: 32, height: 32, borderRadius: "50%", background: t.gradient, boxShadow: themeName === key ? `0 3px 10px ${t.primary}50` : "none" }} />
                     <span style={{ fontSize: 12, fontWeight: themeName === key ? 700 : 400, color: themeName === key ? t.primary : "var(--text-3)" }}>{t.name}</span>
                     {themeName === key && <span style={{ fontSize: 10, color: t.primary }}>✓ נבחר</span>}
@@ -355,24 +380,42 @@ export default function SettingsPage() {
         {/* ── עסק ── */}
         {activeTab === "business" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Field label="שם העסק"><input value={form.storeName} onChange={e => setForm(p => ({ ...p, storeName: e.target.value }))} placeholder="מתפרת מלאק" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
-            <Field label="טלפון"><input value={form.storePhone} onChange={e => setForm(p => ({ ...p, storePhone: e.target.value }))} placeholder="050-0000000" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
-            <Field label="כתובת"><input value={form.storeAddress} onChange={e => setForm(p => ({ ...p, storeAddress: e.target.value }))} placeholder="רחוב, עיר" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></Field>
-            <Field label="טקסט תחתון להדפסה" hint="יופיע בתחתית כל דוח">
-              <textarea value={form.footerText} onChange={e => setForm(p => ({ ...p, footerText: e.target.value }))} placeholder="תודה על שיתוף הפעולה!" rows={3} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.7, paddingTop: 10 }} />
+            <Field label="שם העסק">
+              <input value={form.storeName} onChange={e => setForm(p => ({ ...p, storeName: e.target.value }))} placeholder="מתפרת מלאק" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </Field>
-            {/* Logo */}
-            <Field label="לוגו העסק" hint="PNG / JPG · מקסימום 500KB">
-              <div onClick={() => fileRef.current?.click()}
-                style={{ border: `2px dashed ${logoPreview ? theme.accent : "var(--border)"}`, borderRadius: 12, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", background: logoPreview ? theme.primaryLight : "var(--bg-hover)", minHeight: 100, transition: "all 0.15s" }}>
-                {logoPreview
-                  ? <img src={logoPreview} alt="לוגו" style={{ maxWidth: "100%", maxHeight: 80, objectFit: "contain", borderRadius: 6 }} />
-                  : (<><div style={{ color: theme.primary, display: "flex" }}>{Icons.image}</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>לחץ להעלאת לוגו</div></>)
-                }
+            <Field label="טלפון">
+              <input value={form.storePhone} onChange={e => setForm(p => ({ ...p, storePhone: e.target.value }))} placeholder="050-0000000" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </Field>
+            <Field label="כתובת">
+              <input value={form.storeAddress} onChange={e => setForm(p => ({ ...p, storeAddress: e.target.value }))} placeholder="רחוב, עיר" style={inputStyle} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </Field>
+            <Field label="טקסט תחתון להדפסה כללית" hint="יופיע בתחתית כל דוח">
+              <textarea value={form.footerText} onChange={e => setForm(p => ({ ...p, footerText: e.target.value }))} placeholder="תודה על שיתוף הפעולה!" rows={2} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.7, paddingTop: 10 }} />
+            </Field>
+            <Field label="טקסט תחתון להצעות מחיר" hint="פרטי בנק, תנאי תשלום וכד׳ — יופיע בתחתית כל הצעת מחיר מודפסת">
+              <textarea value={form.bidFooter} onChange={e => setForm(p => ({ ...p, bidFooter: e.target.value }))}
+                placeholder={"לדוגמה:\nבנק לאומי · סניף 800 · חשבון 12345678\nמספר ח.פ: 123456789\nתשלום תוך 30 יום"}
+                rows={4} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.7, paddingTop: 10 }} />
+            </Field>
+
+            {/* ─── Logo upload ── */}
+            <Field label="לוגו העסק" hint="PNG / JPG · מקסימום 1MB · נשמר בשרת">
+              <div onClick={() => !uploadingLogo && fileRef.current?.click()}
+                style={{ border: `2px dashed ${logoPreview ? theme.accent : "var(--border)"}`, borderRadius: 12, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: uploadingLogo ? "wait" : "pointer", background: logoPreview ? theme.primaryLight : "var(--bg-hover)", minHeight: 100, transition: "all 0.15s" }}>
+                {uploadingLogo ? (
+                  <div style={{ fontSize: 13, color: "var(--text-3)" }}>מעלה לוגו...</div>
+                ) : logoPreview ? (
+                  <img src={logoPreview} alt="לוגו" style={{ maxWidth: "100%", maxHeight: 80, objectFit: "contain", borderRadius: 6 }} />
+                ) : (
+                  <><div style={{ color: theme.primary, display: "flex" }}>{Icons.image}</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>לחץ להעלאת לוגו</div></>
+                )}
               </div>
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} onChange={handleLogoUpload} />
-              {logoPreview && <button onClick={() => setLogoPreview("")} style={{ alignSelf: "flex-start", background: "var(--colored-bg)", color: "#ef4444", border: "none", borderRadius: 7, padding: "4px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginTop: 6 }}>הסר לוגו</button>}
+              {logoPreview && !uploadingLogo && (
+                <button onClick={handleRemoveLogo} style={{ alignSelf: "flex-start", background: "var(--colored-bg)", color: "#ef4444", border: "none", borderRadius: 7, padding: "4px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginTop: 6 }}>הסר לוגו</button>
+              )}
             </Field>
+
             <button onClick={handleSave} disabled={saveMut.isPending} style={btnPrimary(theme.primary)}>
               {Icons.save} {saveMut.isPending ? "שומר..." : "שמור"}
             </button>
@@ -419,16 +462,12 @@ export default function SettingsPage() {
         {activeTab === "backup" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: "rgba(5,150,105,0.08)", border: "1px solid rgba(5,150,105,0.25)", borderRadius: 10, padding: "14px 16px", fontSize: 13, color: "#047857", lineHeight: 1.7 }}>
-              <strong>גיבוי ידני</strong> — הורד את כל הנתונים כקובץ ZIP.<br />
-              מומלץ לבצע גיבוי לפני כל עדכון גדול.
+              <strong>גיבוי ידני</strong> — הורד את כל הנתונים כקובץ ZIP.
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button onClick={handleBackup} style={btnPrimary("#059669")}>
-                {Icons.backup} הורד גיבוי עכשיו (ZIP)
-              </button>
+              <button onClick={handleBackup} style={btnPrimary("#059669")}>{Icons.backup} הורד גיבוי עכשיו (ZIP)</button>
               {currentUser?.email === "alaa.t.shaalan@gmail.com" && (
-                <button onClick={async () => { setSendingBackup(true); try { await settingsApi.sendBackup(); toast.success("הגיבוי נשלח למייל ✓"); } catch { toast.error("שגיאה"); } finally { setSendingBackup(false); } }} disabled={sendingBackup}
-                  style={btnPrimary("#0284c7")}>
+                <button onClick={async () => { setSendingBackup(true); try { await settingsApi.sendBackup(); toast.success("הגיבוי נשלח למייל ✓"); } catch { toast.error("שגיאה"); } finally { setSendingBackup(false); } }} disabled={sendingBackup} style={btnPrimary("#0284c7")}>
                   📧 {sendingBackup ? "שולח..." : "שלח גיבוי למייל"}
                 </button>
               )}
@@ -440,16 +479,11 @@ export default function SettingsPage() {
                 style={{ width: "100%", padding: "12px", border: `2px dashed ${restoreFile ? theme.primary : "var(--border)"}`, borderRadius: 10, background: restoreFile ? theme.primaryLight : "var(--bg-hover)", fontSize: 13, fontWeight: 500, color: restoreFile ? theme.primary : "var(--text-3)", cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>
                 📂 {restoreFile ? restoreFile.name : "לחץ לבחירת קובץ גיבוי (.zip / .json)"}
               </button>
-              {restoreFile && (
-                <button onClick={handleRestore} disabled={restoring} style={btnPrimary("#d97706")}>
-                  {restoring ? "משחזר..." : "שחזר עכשיו"}
-                </button>
-              )}
+              {restoreFile && <button onClick={handleRestore} disabled={restoring} style={btnPrimary("#d97706")}>{restoring ? "משחזר..." : "שחזר עכשיו"}</button>}
             </div>
           </div>
         )}
 
-        {/* ── משתמשים ── */}
         {activeTab === "users" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)", marginBottom: 4 }}>משתמשי המערכת</div>
@@ -457,7 +491,6 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* ── אבטחה ── */}
         {activeTab === "security" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ background: "rgba(180,83,9,0.08)", border: "1px solid rgba(180,83,9,0.25)", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "#b45309", lineHeight: 1.6 }}>
@@ -471,7 +504,6 @@ export default function SettingsPage() {
             </button>
           </div>
         )}
-
       </div>
 
       <div style={{ textAlign: "center", padding: "16px", fontSize: 11, color: "var(--text-4)" }}>

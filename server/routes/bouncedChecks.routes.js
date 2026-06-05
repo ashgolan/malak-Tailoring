@@ -8,4 +8,5 @@ bouncedChecksRouter.get("/", auth, getAll);
 bouncedChecksRouter.get("/:id", auth, getOne);
 bouncedChecksRouter.post("/", auth, create);
 bouncedChecksRouter.put("/:id", auth, update);
+bouncedChecksRouter.patch("/:id", auth, update);
 bouncedChecksRouter.delete("/:id", auth, remove);

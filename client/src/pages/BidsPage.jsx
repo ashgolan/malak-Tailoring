@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCrud } from "../hooks/useCrud";
-import { bidsApi, inventoriesApi, taxValuesApi } from "../api";
+import { bidsApi, inventoriesApi, taxValuesApi, settingsApi } from "../api";
 import { useTheme } from "../context/ThemeContext";
 import { useStyles } from "../hooks/useStyles";
 import AutocompleteInput from "../components/ui/AutocompleteInput";
@@ -12,6 +12,107 @@ const today = new Date().toISOString().split("T")[0];
 const nowTime = new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 const fo = (e) => { e.target.style.borderColor = "var(--border-focus)"; };
 const bl = (e) => { e.target.style.borderColor = "var(--border)"; };
+
+// ─── Print helper ──────────────────────────────────────────────
+function printBid(bid, settings, maam) {
+  const base = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+  const logoUrl = settings?.logoUrl ? `${base}${settings.logoUrl}` : (settings?.logoBase64 || ""); const businessName = settings?.businessName || "מתפרת מלאק";
+  const isFree = bid.freeBid;
+  const itemsHtml = !isFree && bid.data?.length > 0 ? `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+      <thead>
+        <tr style="background:#6d28d9;color:#fff;">
+          <th style="padding:8px 10px;text-align:right;">תיאור</th>
+          <th style="padding:8px 10px;text-align:center;">כמות</th>
+          <th style="padding:8px 10px;text-align:right;">מחיר</th>
+          <th style="padding:8px 10px;text-align:right;">סה״כ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${bid.data.map((row, i) => `
+          <tr style="background:${i % 2 === 0 ? '#fff' : '#f5f3ff'};border-bottom:1px solid #e5e7eb;">
+            <td style="padding:8px 10px;">${row.description || ''}</td>
+            <td style="padding:8px 10px;text-align:center;">${row.quantity}</td>
+            <td style="padding:8px 10px;text-align:right;">${fmt(row.price)} ₪</td>
+            <td style="padding:8px 10px;text-align:right;font-weight:700;color:#6d28d9;">${fmt(row.total)} ₪</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  ` : `
+    <div style="background:#f9f7ff;border-radius:8px;padding:14px 16px;margin-bottom:16px;border:1px solid #e5e7eb;white-space:pre-wrap;font-size:13px;line-height:1.8;">
+      ${bid.data?.[0]?.text || ''}
+    </div>
+  `;
+
+  const totalBeforeTax = toNum(bid.totalAmount);
+  const taxAmount = totalBeforeTax * maam / 100;
+  const grandTotal = totalBeforeTax + taxAmount;
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8"/>
+      <title>הצעת מחיר - ${bid.clientName}</title>
+      <style>
+        * { font-family: 'Arial', sans-serif; box-sizing: border-box; }
+        body { margin: 0; padding: 32px; color: #1f2937; direction: rtl; }
+        @media print { body { padding: 16px; } }
+      </style>
+    </head>
+    <body>
+      <!-- Header -->
+<div style="text-align:center;border-bottom:3px solid #6d28d9;padding-bottom:16px;margin-bottom:24px;">
+  ${logoUrl ? `<img src="${logoUrl}" style="height:70px;object-fit:contain;" alt="לוגו"/>` : `<div style="font-size:22px;font-weight:800;color:#6d28d9;">${businessName}</div>`}
+</div>
+
+      <!-- Client info -->
+      <div style="display:flex;justify-content:space-between;margin-bottom:24px;background:#f5f3ff;padding:14px 18px;border-radius:10px;border:1px solid #ede9fe;">
+        <div>
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">לכבוד</div>
+          <div style="font-size:18px;font-weight:700;">${bid.clientName}</div>
+          ${bid.target && bid.target !== '-' ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">עבור: ${bid.target}</div>` : ''}
+        </div>
+        <div style="text-align:left;">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:4px;">תאריך</div>
+          <div style="font-size:15px;font-weight:600;">${bid.date}</div>
+          <div style="font-size:12px;color:#9ca3af;">${bid.time || ''}</div>
+        </div>
+      </div>
+
+      <!-- Items / Free text -->
+      ${itemsHtml}
+
+      <!-- Totals -->
+      <div style="background:#f5f3ff;border-radius:10px;padding:14px 18px;border:1px solid #ede9fe;margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#6b7280;">סה״כ לפני מע״מ</span>
+          <span style="font-size:14px;font-weight:600;">${fmt(totalBeforeTax)} ₪</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#6b7280;">מע״מ (${maam}%)</span>
+          <span style="font-size:14px;color:#d97706;">${fmt(taxAmount)} ₪</span>
+        </div>
+        <div style="border-top:1px solid #ede9fe;padding-top:8px;display:flex;justify-content:space-between;">
+          <span style="font-size:15px;font-weight:700;">סה״כ כולל מע״מ</span>
+          <span style="font-size:20px;font-weight:800;color:#6d28d9;">${fmt(grandTotal)} ₪</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:16px;">
+${settings?.bidFooter ? settings.bidFooter.replace(/\n/g, '<br/>') : `${businessName} · הצעת מחיר תקפה ל-30 יום`}      </div>
+    </body>
+    </html>
+  `;
+
+  const w = window.open("", "_blank");
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 500);
+}
 
 // ─── BidModal ──────────────────────────────────────────────────
 function BidModal({ initial, onClose, onSave, inventories, maam, theme, S, allClients }) {
@@ -51,19 +152,9 @@ function BidModal({ initial, onClose, onSave, inventories, maam, theme, S, allCl
 
         {/* Header fields */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-          {/* ✅ קליינט עם autocomplete */}
           <div>
             <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>קליינט *</label>
-            <AutocompleteInput
-              value={form.clientName}
-              onChange={(e) => setForm(p => ({ ...p, clientName: e.target.value }))}
-              suggestions={allClients}
-              placeholder="שם הלקוח"
-              required
-              style={inputS}
-              onFocus={fo}
-              onBlur={bl}
-            />
+            <AutocompleteInput value={form.clientName} onChange={(e) => setForm(p => ({ ...p, clientName: e.target.value }))} suggestions={allClients} placeholder="שם הלקוח" required style={inputS} onFocus={fo} onBlur={bl} />
           </div>
           <div>
             <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>תאריך</label>
@@ -119,7 +210,7 @@ function BidModal({ initial, onClose, onSave, inventories, maam, theme, S, allCl
             <textarea style={textareaS} value={freeText} onChange={e => setFreeText(e.target.value)} placeholder="פרט את ההצעה כאן..." onFocus={fo} onBlur={bl} />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>סכום כולל (₪)</label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text-3)", marginBottom: 6 }}>סכום לפני מע״מ (₪)</label>
             <input type="number" style={{ ...inputS, fontSize: 18, fontWeight: 700, color: theme.primary }} value={form.totalAmount} onChange={set("totalAmount")} onFocus={fo} onBlur={bl} />
           </div>
         </>)}
@@ -152,17 +243,25 @@ function BidModal({ initial, onClose, onSave, inventories, maam, theme, S, allCl
 }
 
 // ─── ViewModal ─────────────────────────────────────────────────
-function ViewModal({ bid, onClose, onToggleApprove, theme }) {
+function ViewModal({ bid, onClose, onToggleApprove, theme, settings, maam }) {
   const isFree = bid.freeBid;
+  const totalBeforeTax = toNum(bid.totalAmount);
+  const taxAmount = totalBeforeTax * maam / 100;
+  const grandTotal = totalBeforeTax + taxAmount;
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16, backdropFilter: "blur(2px)" }} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{ background: "var(--bg-modal)", borderRadius: 16, width: "100%", maxWidth: 560, maxHeight: "88vh", overflowY: "auto", padding: 28, boxShadow: "var(--shadow-modal)", direction: "rtl", border: "1px solid var(--border)" }}>
+
+        {/* Header */}
         <div style={{ borderBottom: `2px solid ${theme.primary}`, paddingBottom: 16, marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: "var(--text-4)", marginBottom: 4 }}>הצעת מחיר</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)" }}>{bid.clientName}</div>
           <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4 }}>תאריך: {bid.date} | {bid.time}</div>
           {bid.target && bid.target !== "-" && <div style={{ marginTop: 10, fontSize: 14, fontWeight: 600, color: "var(--text-2)" }}>עבור: {bid.target}</div>}
         </div>
+
+        {/* Content */}
         {isFree && bid.data?.length > 0 && (
           <div style={{ background: "var(--bg-card-alt)", borderRadius: 10, padding: "14px 16px", marginBottom: 16, border: "1px solid var(--border)", whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.8, color: "var(--text-1)" }}>
             {bid.data[0]?.text || ""}
@@ -187,19 +286,37 @@ function ViewModal({ bid, onClose, onToggleApprove, theme }) {
             </tbody>
           </table>
         )}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "var(--bg-hover)", borderRadius: 10, border: `1px solid ${theme.primaryBorder}`, marginBottom: 20 }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>סה״כ</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: theme.primary }}>{fmt(bid.totalAmount)} ₪</span>
+
+        {/* Totals */}
+        <div style={{ background: "var(--bg-hover)", borderRadius: 10, border: `1px solid ${theme.primaryBorder}`, padding: "12px 16px", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+            <span style={{ fontSize: 13, color: "var(--text-3)" }}>סה״כ לפני מע״מ</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>{fmt(totalBeforeTax)} ₪</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: "var(--text-3)" }}>מע״מ ({maam}%)</span>
+            <span style={{ fontSize: 14, color: "#d97706" }}>{fmt(taxAmount)} ₪</span>
+          </div>
+          <div style={{ borderTop: `1px solid ${theme.primaryBorder}`, paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)" }}>סה״כ כולל מע״מ</span>
+            <span style={{ fontSize: 22, fontWeight: 700, color: theme.primary }}>{fmt(grandTotal)} ₪</span>
+          </div>
         </div>
+
+        {/* Actions */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 13, fontWeight: 600, padding: "6px 12px", borderRadius: 20, background: bid.isApproved ? "rgba(22,163,74,0.12)" : "rgba(217,119,6,0.12)", color: bid.isApproved ? "#16a34a" : "#d97706" }}>
             {bid.isApproved ? "✅ מאושר" : "⏳ ממתין לאישור"}
           </span>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={onToggleApprove} style={{ padding: "8px 16px", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: bid.isApproved ? "rgba(217,119,6,0.12)" : "rgba(22,163,74,0.12)", color: bid.isApproved ? "#d97706" : "#16a34a" }}>
+            <button onClick={() => printBid(bid, settings, maam)}
+              style={{ padding: "8px 14px", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: "rgba(59,130,246,0.12)", color: "#3b82f6" }}>
+              🖨️ הדפס
+            </button>
+            <button onClick={onToggleApprove} style={{ padding: "8px 14px", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: bid.isApproved ? "rgba(217,119,6,0.12)" : "rgba(22,163,74,0.12)", color: bid.isApproved ? "#d97706" : "#16a34a" }}>
               {bid.isApproved ? "↩ בטל" : "✓ אשר הצעה"}
             </button>
-            <button onClick={onClose} style={{ padding: "8px 16px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--btn-cancel-bg)", fontSize: 13, color: "var(--btn-cancel-text)", cursor: "pointer", fontFamily: "inherit" }}>סגור</button>
+            <button onClick={onClose} style={{ padding: "8px 14px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--btn-cancel-bg)", fontSize: 13, color: "var(--btn-cancel-text)", cursor: "pointer", fontFamily: "inherit" }}>סגור</button>
           </div>
         </div>
       </div>
@@ -214,12 +331,13 @@ export default function BidsPage() {
   const { data, isLoading, create, update, remove } = useCrud("bids", bidsApi);
   const { data: inventories } = useQuery({ queryKey: ["inventories"], queryFn: () => inventoriesApi.getAll().then(r => r.data) });
   const { data: taxValues } = useQuery({ queryKey: ["taxValues"], queryFn: () => taxValuesApi.get().then(r => r.data) });
+  const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: () => settingsApi.get().then(r => r.data) });
   const [modal, setModal] = useState(null);
   const [viewBid, setViewBid] = useState(null);
   const [search, setSearch] = useState("");
 
   const maam = toNum(taxValues?.maamValue || 17);
-  const allClients = [...new Set((data || []).map(b => b.clientName).filter(Boolean))].sort(); // ✅
+  const allClients = [...new Set((data || []).map(b => b.clientName).filter(Boolean))].sort();
   const filtered = (data || []).filter(b => !search || b.clientName?.toLowerCase().includes(search.toLowerCase()) || b.target?.toLowerCase().includes(search.toLowerCase()));
   const approved = (data || []).filter(b => b.isApproved).length;
   const pending = (data || []).length - approved;
@@ -232,8 +350,6 @@ export default function BidsPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, direction: "rtl" }}>
-
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: theme.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📄</div>
@@ -246,13 +362,11 @@ export default function BidsPage() {
             </p>
           </div>
         </div>
-        <button onClick={() => setModal("add")}
-          style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+        <button onClick={() => setModal("add")} style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
           + הצעה חדשה
         </button>
       </div>
 
-      {/* Stats */}
       <div style={S.statBar}>
         {[
           { label: 'סה"כ לפני מע"מ', value: `${fmt(totalAll)} ₪`, color: "var(--text-1)" },
@@ -269,11 +383,8 @@ export default function BidsPage() {
         ))}
       </div>
 
-      {/* Search */}
-      <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-        placeholder="חיפוש לפי לקוח או נושא..." style={S.inputLg} onFocus={fo} onBlur={bl} />
+      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי לקוח או נושא..." style={S.inputLg} onFocus={fo} onBlur={bl} />
 
-      {/* Cards */}
       {isLoading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
           <div className="rosh-spinner" style={{ borderTopColor: theme.primary }} />
@@ -302,18 +413,12 @@ export default function BidsPage() {
               )}
               <div style={{ fontSize: 20, fontWeight: 700, color: theme.primary }}>{fmt(bid.totalAmount)} ₪</div>
               <div style={{ display: "flex", gap: 8 }} onClick={e => e.stopPropagation()}>
-                <button onClick={() => setModal(bid)}
-                  style={{ flex: 1, padding: "7px", border: "none", borderRadius: 8, background: theme.primaryLight, color: theme.primary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  ✎ עריכה
-                </button>
-                <button onClick={() => toggleApprove(bid)}
-                  style={{ flex: 1, padding: "7px", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: bid.isApproved ? "rgba(217,119,6,0.12)" : "rgba(22,163,74,0.12)", color: bid.isApproved ? "#d97706" : "#16a34a" }}>
+                <button onClick={() => setModal(bid)} style={{ flex: 1, padding: "7px", border: "none", borderRadius: 8, background: theme.primaryLight, color: theme.primary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>✎ עריכה</button>
+                <button onClick={() => toggleApprove(bid)} style={{ flex: 1, padding: "7px", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: bid.isApproved ? "rgba(217,119,6,0.12)" : "rgba(22,163,74,0.12)", color: bid.isApproved ? "#d97706" : "#16a34a" }}>
                   {bid.isApproved ? "↩ בטל" : "✓ אשר"}
                 </button>
-                <button onClick={() => { if (window.confirm("למחוק?")) remove(bid._id); }}
-                  style={{ padding: "7px 10px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--btn-cancel-bg)", fontSize: 13, cursor: "pointer", color: "#ef4444" }}>
-                  🗑
-                </button>
+                <button onClick={() => printBid(bid, settings, maam)} style={{ padding: "7px 10px", border: "none", borderRadius: 8, background: "rgba(59,130,246,0.1)", fontSize: 13, cursor: "pointer", color: "#3b82f6" }}>🖨️</button>
+                <button onClick={() => { if (window.confirm("למחוק?")) remove(bid._id); }} style={{ padding: "7px 10px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--btn-cancel-bg)", fontSize: 13, cursor: "pointer", color: "#ef4444" }}>🗑</button>
               </div>
             </div>
           ))}
@@ -321,24 +426,10 @@ export default function BidsPage() {
       )}
 
       {modal && (
-        <BidModal
-          initial={modal === "add" ? null : modal}
-          onClose={() => setModal(null)}
-          onSave={handleSave}
-          inventories={inventories}
-          maam={maam}
-          theme={theme}
-          S={S}
-          allClients={allClients}
-        />
+        <BidModal initial={modal === "add" ? null : modal} onClose={() => setModal(null)} onSave={handleSave} inventories={inventories} maam={maam} theme={theme} S={S} allClients={allClients} />
       )}
       {viewBid && (
-        <ViewModal
-          bid={viewBid}
-          onClose={() => setViewBid(null)}
-          onToggleApprove={() => toggleApprove(viewBid)}
-          theme={theme}
-        />
+        <ViewModal bid={viewBid} onClose={() => setViewBid(null)} onToggleApprove={() => toggleApprove(viewBid)} theme={theme} settings={settings} maam={maam} />
       )}
     </div>
   );

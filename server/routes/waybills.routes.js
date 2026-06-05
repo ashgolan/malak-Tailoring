@@ -8,4 +8,5 @@ waybillsRouter.get("/", auth, getAll);
 waybillsRouter.get("/:id", auth, getOne);
 waybillsRouter.post("/", auth, create);
 waybillsRouter.put("/:id", auth, update);
+waybillsRouter.patch("/:id", auth, update);
 waybillsRouter.delete("/:id", auth, remove);

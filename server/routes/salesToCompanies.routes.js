@@ -8,4 +8,5 @@ salesToCompaniesRouter.get("/", auth, getAll);
 salesToCompaniesRouter.get("/:id", auth, getOne);
 salesToCompaniesRouter.post("/", auth, create);
 salesToCompaniesRouter.put("/:id", auth, update);
+salesToCompaniesRouter.patch("/:id", auth, update);
 salesToCompaniesRouter.delete("/:id", auth, remove);
