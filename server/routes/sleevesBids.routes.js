@@ -2,11 +2,14 @@ import { Router } from "express";
 import { createCrudController } from "../controllers/crudController.js";
 import { SleevesBid } from "../models/sleevesBid.model.js";
 import { auth } from "../middleware/auth.middleware.js";
+import { validate, schemas } from "../middleware/validate.middleware.js";
+
 const { getAll, getOne, create, update, remove } = createCrudController(SleevesBid);
 export const sleevesBidsRouter = Router();
-sleevesBidsRouter.get("/", auth, getAll);
-sleevesBidsRouter.get("/:id", auth, getOne);
-sleevesBidsRouter.post("/", auth, create);
-sleevesBidsRouter.put("/:id", auth, update);
-sleevesBidsRouter.patch("/:id", auth, update);
-sleevesBidsRouter.delete("/:id", auth, remove);
+
+sleevesBidsRouter.get("/",       auth,                               getAll);
+sleevesBidsRouter.get("/:id",    auth,                               getOne);
+sleevesBidsRouter.post("/",      auth, validate(schemas.sleevesBid), create);
+sleevesBidsRouter.put("/:id",    auth, validate(schemas.sleevesBid), update);
+sleevesBidsRouter.patch("/:id",  auth,                               update);
+sleevesBidsRouter.delete("/:id", auth,                               remove);

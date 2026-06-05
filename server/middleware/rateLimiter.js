@@ -1,6 +1,6 @@
 import rateLimit from "express-rate-limit";
 
-// حماية صفحة الـ login — 5 محاولات كل 15 دقيقة لكل IP
+// ─── Login — 5 محاولات كل 15 دقيقة لكل IP ──────────────────────
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -9,10 +9,28 @@ export const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// حماية الـ API العام — 200 طلب كل 15 دقيقة لكل IP
+// ─── GET (قراءة) — 300 طلب كل 15 دقيقة ─────────────────────────
+export const readLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: { error: "طلبات كثيرة جداً، حاول لاحقاً" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ─── POST/PUT/PATCH/DELETE (كتابة) — 100 طلب كل 15 دقيقة ───────
+export const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: "طلبات كتابة كثيرة جداً، حاول لاحقاً" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ─── API العام — fallback للـ routes التي لم تُحدَّد بعد ────────
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 300,
   message: { error: "طلبات كثيرة جداً، حاول لاحقاً" },
   standardHeaders: true,
   legacyHeaders: false,

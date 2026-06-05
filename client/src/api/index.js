@@ -6,22 +6,35 @@ const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 30000,  // ✅ 30 ثانية — لا ينتظر إلى الأبد
 });
 
+// ─── Request interceptor — إضافة الـ token ───────────────────
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = token;
   return config;
 });
 
+// ─── Response interceptor — معالجة 401 + timeout ─────────────
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
+    // Timeout
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject(new Error("הבקשה ארכה זמן רב מדי, נסה שוב"));
+    }
+
+    // 401 — token منتهي الصلاحية
     if (error.response?.status === 401) {
       const refreshToken = useAuthStore.getState().refreshToken;
       if (refreshToken) {
         try {
-          const { data } = await axios.post(`${BASE_URL}/users/refresh`, { refreshToken });
+          const { data } = await axios.post(
+            `${BASE_URL}/users/refresh`,
+            { refreshToken },
+            { timeout: 10000 }
+          );
           useAuthStore.getState().setAuth(data);
           error.config.headers.Authorization = data.accessToken;
           return api(error.config);
@@ -34,17 +47,19 @@ api.interceptors.response.use(
         window.location.href = "/login";
       }
     }
+
     return Promise.reject(error);
   }
 );
 
+// ─── API Services ─────────────────────────────────────────────
 export const createApiService = (endpoint) => ({
-  getAll: () => api.get(`/${endpoint}`),
-  getOne: (id) => api.get(`/${endpoint}/${id}`),
-  create: (data) => api.post(`/${endpoint}`, data),
-  update: (id, data) => api.put(`/${endpoint}/${id}`, data),
-  patch:  (id, data) => api.patch(`/${endpoint}/${id}`, data),
-  remove: (id) => api.delete(`/${endpoint}/${id}`),
+  getAll: ()           => api.get(`/${endpoint}`),
+  getOne: (id)         => api.get(`/${endpoint}/${id}`),
+  create: (data)       => api.post(`/${endpoint}`, data),
+  update: (id, data)   => api.put(`/${endpoint}/${id}`, data),
+  patch:  (id, data)   => api.patch(`/${endpoint}/${id}`, data),
+  remove: (id)         => api.delete(`/${endpoint}/${id}`),
 });
 
 export const salesApi            = createApiService("sales");
@@ -64,17 +79,17 @@ export const contactsApi         = createApiService("contacts");
 export const eventsApi           = createApiService("events");
 
 export const taxValuesApi = {
-  get: () => settingsApi.get(),
+  get:    () =>     settingsApi.get(),
   upsert: (data) => settingsApi.update(data),
 };
 
 export const settingsApi = {
-  get: () => api.get("/settings"),
-  update: (data) => api.put("/settings", data),
-  updateSecurity: (data) => api.put("/settings/security", data),
-  backup: () => api.get("/settings/backup", { responseType: "arraybuffer" }),
-  sendBackup: () => api.post("/settings/send-backup"),
-  uploadLogo: (file) => {
+  get:            ()       => api.get("/settings"),
+  update:         (data)   => api.put("/settings", data),
+  updateSecurity: (data)   => api.put("/settings/security", data),
+  backup:         ()       => api.get("/settings/backup", { responseType: "arraybuffer" }),
+  sendBackup:     ()       => api.post("/settings/send-backup"),
+  uploadLogo:     (file)   => {
     const formData = new FormData();
     formData.append("logo", file);
     return api.post("/settings/upload-logo", formData, {
@@ -84,10 +99,10 @@ export const settingsApi = {
 };
 
 export const usersApi = {
-  login: (data) => api.post("/users/login", data),
-  logout: () => api.post("/users/logout"),
-  getMe: () => api.get("/users/me"),
-  getAll: () => api.get("/users"),
+  login:  (data) => api.post("/users/login", data),
+  logout: ()     => api.post("/users/logout"),
+  getMe:  ()     => api.get("/users/me"),
+  getAll: ()     => api.get("/users"),
   create: (data) => api.post("/users/register", data),
   update: (data) => api.put("/users", data),
   remove: (data) => api.delete("/users", { data }),

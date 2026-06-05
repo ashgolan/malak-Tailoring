@@ -8,7 +8,7 @@ import {
   LayoutDashboard, ShoppingCart, CheckSquare, Users, Truck,
   CreditCard, Building2, Scissors, FileText, BarChart3,
   Package, UserCircle, BookOpen, Settings, LogOut,
-  Menu, X, Wallet, Building, Sun, Moon,
+  Menu, X, Wallet, Building, Sun, Moon, CalendarDays,
 } from "lucide-react";
 import { useDarkMode } from "../../context/DarkModeContext";
 
@@ -23,30 +23,33 @@ function useBreakpoint() {
   return bp;
 }
 
+// ✅ הוספת אירועים לתפריט הניווט
 const navItems = [
-  { path: "/", label: "לוח בקרה", icon: LayoutDashboard, exact: true },
-  { path: "/sales", label: "מכירות", icon: ShoppingCart },
-  { path: "/sleeves-bids", label: "שרוולים", icon: Scissors },
-  { path: "/bids", label: "הצעות מחיר", icon: FileText },
-  { path: "/bounced-checks", label: "שיקים דחויים", icon: CheckSquare },
-  { path: "/workers-expenses", label: "הוצאות עובדים", icon: Users },
-  { path: "/waybills", label: "תעודות משלוח", icon: Truck },
-  { path: "/partial-payment", label: "תשלום חלקי", icon: CreditCard },
-  { path: "/institution-tax", label: "חשבוניות למוסדות", icon: Building2 },
-  { path: "/sales-to-companies", label: "מכירות לחברות", icon: Building },
-  { path: "/expenses", label: "הוצאות", icon: Wallet },
-  { path: "/inventories", label: "מלאי", icon: Package },
-  { path: "/providers", label: "ספקים", icon: UserCircle },
-  { path: "/contacts", label: "אנשי קשר", icon: BookOpen },
-  { path: "/charts", label: "דוחות", icon: BarChart3 },
-  { path: "/settings", label: "הגדרות", icon: Settings },
+  { path: "/",                  label: "לוח בקרה",          icon: LayoutDashboard, exact: true },
+  { path: "/sales",             label: "מכירות",            icon: ShoppingCart },
+  { path: "/sleeves-bids",      label: "שרוולים",           icon: Scissors },
+  { path: "/bids",              label: "הצעות מחיר",        icon: FileText },
+  { path: "/bounced-checks",    label: "שיקים דחויים",      icon: CheckSquare },
+  { path: "/workers-expenses",  label: "הוצאות עובדים",     icon: Users },
+  { path: "/waybills",          label: "תעודות משלוח",      icon: Truck },
+  { path: "/partial-payment",   label: "תשלום חלקי",        icon: CreditCard },
+  { path: "/institution-tax",   label: "חשבוניות למוסדות",  icon: Building2 },
+  { path: "/sales-to-companies",label: "מכירות לחברות",     icon: Building },
+  { path: "/expenses",          label: "הוצאות",            icon: Wallet },
+  { path: "/inventories",       label: "מלאי",              icon: Package },
+  { path: "/providers",         label: "ספקים",             icon: UserCircle },
+  { path: "/contacts",          label: "אנשי קשר",          icon: BookOpen },
+  { path: "/events",            label: "אירועים",           icon: CalendarDays },  // ✅ חדש
+  { path: "/charts",            label: "דוחות",             icon: BarChart3 },
+  { path: "/settings",          label: "הגדרות",            icon: Settings },
 ];
 
 const mobileNav = [
-  { path: "/", label: "בקרה", icon: LayoutDashboard, exact: true },
-  { path: "/sales", label: "מכירות", icon: ShoppingCart },
-  { path: "/charts", label: "דוחות", icon: BarChart3 },
-  { path: "/settings", label: "הגדרות", icon: Settings },
+  { path: "/",        label: "בקרה",    icon: LayoutDashboard, exact: true },
+  { path: "/sales",   label: "מכירות",  icon: ShoppingCart },
+  { path: "/events",  label: "אירועים", icon: CalendarDays },
+  { path: "/charts",  label: "דוחות",   icon: BarChart3 },
+  { path: "/settings",label: "הגדרות",  icon: Settings },
 ];
 
 const GLOBAL_CSS = `
@@ -58,61 +61,52 @@ const GLOBAL_CSS = `
     --bg-hover:      #f5f3ff;
     --bg-modal:      #ffffff;
     --bg-overlay:    rgba(0,0,0,0.45);
+    --bg-stat:       #f8f7ff;
     --bg-tag:        #f3f4f6;
-    --bg-stat:       #ffffff;
     --text-1:        #111827;
-    --text-2:        #4b5563;
+    --text-2:        #374151;
     --text-3:        #6b7280;
     --text-4:        #9ca3af;
-    --border:        #e5e7eb;
-    --border-light:  #f0f0ef;
-    --border-focus:  #c4b5fd;
-    --shadow-card:   0 1px 4px rgba(0,0,0,0.06);
-    --shadow-modal:  0 20px 60px rgba(0,0,0,0.15);
-    --btn-cancel-bg: #ffffff;
-    --btn-cancel-text:#6b7280;
-    --btn-cancel-bdr: #e5e7eb;
-    --colored-bg:    #fef2f2;
-    --colored-border:#fecaca;
-    --colored-text:  #991b1b;
+    --border:        rgba(0,0,0,0.1);
+    --border-light:  rgba(0,0,0,0.06);
+    --shadow-card:   0 1px 3px rgba(0,0,0,0.07);
+    --shadow-modal:  0 8px 32px rgba(0,0,0,0.14);
     --bottom-bg:     #ffffff;
-    --bottom-border: #e8eaf0;
+    --bottom-border: rgba(0,0,0,0.08);
+    --colored-bg:    #fffbeb;
+    --colored-border:#fde68a;
+    --btn-cancel-bg: #f9fafb;
+    --btn-cancel-text:#374151;
+    --btn-cancel-bdr: rgba(0,0,0,0.12);
   }
   [data-theme="dark"] {
-    --page-bg:        #111318;
-    --bg-card:        #1a1d23;
-    --bg-card-alt:    #1e2128;
-    --bg-input:       #1e2128;
-    --bg-hover:       #22262e;
-    --bg-modal:       #1a1d23;
-    --bg-overlay:     rgba(0,0,0,0.65);
-    --bg-tag:         #1e2128;
-    --bg-stat:        #1a1d23;
-    --text-1:         #c8cdd6;
-    --text-2:         #8b919e;
-    --text-3:         #6b7280;
-    --text-4:         #4b5262;
-    --border:         #252930;
-    --border-light:   #1e2128;
-    --border-focus:   #5b6fd4;
-    --shadow-card:    0 1px 4px rgba(0,0,0,0.35);
-    --shadow-modal:   0 20px 60px rgba(0,0,0,0.55);
-    --btn-cancel-bg:  #1e2128;
-    --btn-cancel-text:#8b919e;
-    --btn-cancel-bdr: #252930;
-    --colored-bg:     rgba(239,68,68,0.08);
-    --colored-border: rgba(239,68,68,0.2);
-    --colored-text:   #e8918a;
-    --bottom-bg:      #151820;
-    --bottom-border:  #1e1e1e;
+    --page-bg:       #0f1117;
+    --bg-card:       #1a1d27;
+    --bg-card-alt:   #141720;
+    --bg-input:      #1e2130;
+    --bg-hover:      #252840;
+    --bg-modal:      #1a1d27;
+    --bg-overlay:    rgba(0,0,0,0.65);
+    --bg-stat:       #1e2130;
+    --bg-tag:        #252840;
+    --text-1:        #f1f5f9;
+    --text-2:        #cbd5e1;
+    --text-3:        #94a3b8;
+    --text-4:        #64748b;
+    --border:        rgba(255,255,255,0.1);
+    --border-light:  rgba(255,255,255,0.06);
+    --shadow-card:   0 1px 3px rgba(0,0,0,0.3);
+    --shadow-modal:  0 8px 32px rgba(0,0,0,0.5);
+    --bottom-bg:     #1a1d27;
+    --bottom-border: rgba(255,255,255,0.08);
+    --colored-bg:    #2d2a1a;
+    --colored-border:#78700a;
+    --btn-cancel-bg: #252840;
+    --btn-cancel-text:#cbd5e1;
+    --btn-cancel-bdr: rgba(255,255,255,0.1);
   }
   * { box-sizing: border-box; }
-  html, body, #root {
-    background: var(--page-bg) !important;
-    color: var(--text-1);
-    transition: background 0.2s, color 0.15s;
-  }
-  [data-theme="dark"] main { background: var(--page-bg) !important; }
+  body { margin: 0; font-family: inherit; direction: rtl; }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
@@ -141,8 +135,8 @@ export default function Layout() {
   const isTablet = bp === "tablet";
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile && !isTablet);
   const { isDark, toggle: toggleDark } = useDarkMode();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const { clearAuth } = useAuthStore();
   const { theme } = useTheme();
 
@@ -154,14 +148,15 @@ export default function Layout() {
 
   const handleLogout = async () => {
     try { await usersApi.logout(); } catch { }
-    clearAuth(); navigate("/login");
+    clearAuth();
+    navigate("/login");
     toast.success("התנתקת בהצלחה");
   };
 
   const showLabel = isMobile || (!isTablet && sidebarOpen);
-  const sidebarW = isMobile ? "78vw" : isTablet ? 60 : sidebarOpen ? 244 : 60;
-  const GOLD = "#c9a84c";
-  const SB_BG = "linear-gradient(180deg,#111827 0%,#0f172a 100%)";
+  const sidebarW  = isMobile ? "78vw" : isTablet ? 60 : sidebarOpen ? 244 : 60;
+  const GOLD   = "#c9a84c";
+  const SB_BG  = "linear-gradient(180deg,#111827 0%,#0f172a 100%)";
 
   return (
     <>
@@ -170,8 +165,10 @@ export default function Layout() {
 
         {/* Overlay */}
         {isMobile && sidebarOpen && (
-          <div onClick={() => setSidebarOpen(false)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 40, backdropFilter: "blur(2px)" }} />
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 40, backdropFilter: "blur(2px)" }}
+          />
         )}
 
         {/* ══ SIDEBAR ══ */}
@@ -210,8 +207,10 @@ export default function Layout() {
               </div>
             )}
             {!isTablet && (
-              <button onClick={() => setSidebarOpen(o => !o)}
-                style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0, display: "flex" }}>
+              <button
+                onClick={() => setSidebarOpen(o => !o)}
+                style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0, display: "flex" }}
+              >
                 {(sidebarOpen || isMobile) ? <X size={17} /> : <Menu size={17} />}
               </button>
             )}
@@ -243,43 +242,52 @@ export default function Layout() {
             ))}
           </nav>
 
-          {/* Bottom — logout فقط */}
+          {/* Bottom — logout */}
           <div style={{ padding: "6px", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
-            <button onClick={handleLogout}
+            <button
+              onClick={handleLogout}
               title={!showLabel ? "התנתק" : undefined}
-              style={{ display: "flex", alignItems: "center", justifyContent: showLabel ? "flex-start" : "center", gap: 10, width: "100%", padding: showLabel ? "9px 11px" : "11px 0", borderRadius: 8, background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer" }}>
-              <LogOut size={15} style={{ flexShrink: 0 }} />
-              {showLabel && <span style={{ fontSize: 13 }}>התנתק</span>}
+              style={{
+                display: "flex", alignItems: "center",
+                justifyContent: showLabel ? "flex-start" : "center",
+                gap: 10, width: "100%",
+                padding: showLabel ? "9px 11px" : "11px 0",
+                borderRadius: 8, background: "transparent",
+                border: "none", color: "rgba(255,255,255,0.35)",
+                cursor: "pointer", fontSize: 13, fontFamily: "inherit",
+                transition: "background 0.12s, color 0.12s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.color = "#f87171"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
+            >
+              <LogOut size={16} style={{ flexShrink: 0 }} />
+              {showLabel && <span>התנתק</span>}
             </button>
           </div>
         </aside>
 
         {/* ══ MAIN ══ */}
-        <main style={{
-          flex: 1, overflowY: "auto", overflowX: "hidden",
-          display: "flex", flexDirection: "column",
-          minWidth: 0, background: "var(--page-bg)",
-        }}>
-
-          {/* Mobile top bar */}
-          {isMobile && (
+        <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+          {/* Top bar (tablet) */}
+          {isTablet && (
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "11px 14px", flexShrink: 0,
+              padding: "10px 16px",
+              borderBottom: "1px solid var(--border-light)",
               background: "var(--bg-card)",
-              borderBottom: "1px solid var(--border)",
+              flexShrink: 0,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src="/icons/icon-512.png" alt="מלאק" style={{ width: 28, height: 28, objectFit: "contain" }} />
-                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-1)" }}>מתפרת מלאק</span>
-              </div>
-              <div style={{ display: "flex", gap: 4 }}>
-                <button onClick={toggleDark}
-                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 6, display: "flex", color: "var(--text-3)" }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => toggleDark()}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 6, display: "flex", color: "var(--text-1)" }}
+                >
                   {isDark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
-                <button onClick={() => setSidebarOpen(true)}
-                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 6, display: "flex", color: "var(--text-1)" }}>
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: 6, display: "flex", color: "var(--text-1)" }}
+                >
                   <Menu size={21} />
                 </button>
               </div>
@@ -292,6 +300,7 @@ export default function Layout() {
             padding: isMobile ? "12px" : isTablet ? "18px 20px" : "22px 28px",
             paddingBottom: isMobile ? "80px" : "22px",
             boxSizing: "border-box",
+            overflowY: "auto",
           }}>
             <Outlet />
           </div>
@@ -317,8 +326,10 @@ export default function Layout() {
                 )}
               </NavLink>
             ))}
-            <button onClick={() => setSidebarOpen(true)}
-              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "transparent", border: "none", cursor: "pointer", padding: "8px 4px" }}>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, background: "transparent", border: "none", cursor: "pointer", padding: "8px 4px" }}
+            >
               <Menu size={19} color="var(--text-4)" />
               <span style={{ fontSize: 10, color: "var(--text-4)" }}>תפריט</span>
             </button>
