@@ -14,24 +14,17 @@
  *   printViaIframe("عنوان", `<html>..${logoHtml}..</html>`);
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "";
-
 // ─── buildLogoHtml ────────────────────────────────────────────
 /**
  * @param {object} settings - كائن الإعدادات من السيرفر
  * @returns {string} HTML string للوغو أو اسم المتجر
  */
 export function getLogoHtml(settings) {
-  const logoSrc = settings?.logoUrl
-    ? `${BASE_URL}${settings.logoUrl}`
-    : settings?.logoBase64 || "";
-
-  if (logoSrc) {
+  if (settings?.logoBase64) {
     return `<div style="text-align:center;margin-bottom:14px;">
-      <img src="${logoSrc}" style="max-height:90px;max-width:55%;object-fit:contain;" />
+      <img src="${settings.logoBase64}" style="max-height:90px;max-width:55%;object-fit:contain;" />
     </div>`;
   }
-
   return `<div style="text-align:center;margin-bottom:14px;font-size:22px;font-weight:800;color:#1f2937;">
     ${settings?.storeName || "מתפרת מלאק"}
   </div>`;

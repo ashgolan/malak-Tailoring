@@ -33,7 +33,6 @@ const Icons = {
   percent: <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="4.5" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.3" /><circle cx="11.5" cy="11.5" r="2" stroke="currentColor" strokeWidth="1.3" /><path d="M3 13L13 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
 };
 
-const getBase = () => import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
 function Field({ label, hint, children }) {
   return (
@@ -221,7 +220,6 @@ export default function SettingsPage() {
   const [restoring, setRestoring] = useState(false);
   const [sendingBackup, setSendingBackup] = useState(false);
   const [logoPreview, setLogoPreview] = useState("");
-  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [form, setForm] = useState({
     storeName: "", storePhone: "", storeAddress: "",
     footerText: "", bidFooter: "",
@@ -246,14 +244,7 @@ export default function SettingsPage() {
         maamValue: String(settings.maamValue || 17),
         masValue: String(settings.masValue || 2.5),
       });
-      // Build full logo URL
-      if (settings.logoUrl) {
-        setLogoPreview(`${getBase()}${settings.logoUrl}`);
-      } else if (settings.logoBase64) {
-        setLogoPreview(settings.logoBase64);
-      } else {
-        setLogoPreview("");
-      }
+      setLogoPreview(settings.logoBase64 || "");
     }
   }, [settings]);
 
@@ -269,38 +260,24 @@ export default function SettingsPage() {
     onError: (e) => toast.error(e.response?.data?.message || "שגיאה")
   });
 
-  const handleSave = () => saveMut.mutate({ ...form });
+  const handleSave = () => saveMut.mutate({ ...form, logoBase64: logoPreview });
 
   const handleSecurity = () => {
     if (secForm.newPassword !== secForm.confirmPassword) { toast.error("הסיסמאות אינן תואמות"); return; }
     secMut.mutate({ currentPassword: secForm.currentPassword, newPassword: secForm.newPassword });
   };
 
-  const handleLogoUpload = async (e) => {
+  const handleLogoUpload = (e) => {
     const file = e.target.files?.[0]; if (!file) return;
     if (file.size > 1024 * 1024) { toast.error("הקובץ גדול מדי (מקסימום 1MB)"); return; }
-    setUploadingLogo(true);
-    try {
-      const res = await settingsApi.uploadLogo(file);
-      const logoUrl = res.data.logoUrl; // e.g. /uploads/logos/logo_xxx.jpg
-      setLogoPreview(`${getBase()}${logoUrl}`);
-      // Save logoUrl in settings
-      await settingsApi.update({ ...form, logoUrl });
-      toast.success("הלוגו הועלה ✓");
-      qc.invalidateQueries(["settings"]);
-    } catch (err) {
-      console.error(err);
-      toast.error("שגיאה בהעלאת הלוגו");
-    } finally {
-      setUploadingLogo(false);
-    }
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoPreview(ev.target.result);
+    reader.readAsDataURL(file);
   };
 
-  const handleRemoveLogo = async () => {
+  const handleRemoveLogo = () => {
     setLogoPreview("");
-    await settingsApi.update({ ...form, logoBase64: "", logoUrl: "" });
-    qc.invalidateQueries(["settings"]);
-    toast.success("הלוגו הוסר ✓");
+    toast.success("הלוגו הוסר — לחץ שמור לאישור");
   };
 
   const handleBackup = async () => {
@@ -399,19 +376,17 @@ export default function SettingsPage() {
             </Field>
 
             {/* ─── Logo upload ── */}
-            <Field label="לוגו העסק" hint="PNG / JPG · מקסימום 1MB · נשמר בשרת">
-              <div onClick={() => !uploadingLogo && fileRef.current?.click()}
-                style={{ border: `2px dashed ${logoPreview ? theme.accent : "var(--border)"}`, borderRadius: 12, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: uploadingLogo ? "wait" : "pointer", background: logoPreview ? theme.primaryLight : "var(--bg-hover)", minHeight: 100, transition: "all 0.15s" }}>
-                {uploadingLogo ? (
-                  <div style={{ fontSize: 13, color: "var(--text-3)" }}>מעלה לוגו...</div>
-                ) : logoPreview ? (
+            <Field label="לוגו העסק" hint="PNG / JPG · מקסימום 1MB · נשמר בבסיס הנתונים">
+              <div onClick={() => fileRef.current?.click()}
+                style={{ border: `2px dashed ${logoPreview ? theme.accent : "var(--border)"}`, borderRadius: 12, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer", background: logoPreview ? theme.primaryLight : "var(--bg-hover)", minHeight: 100, transition: "all 0.15s" }}>
+                {logoPreview ? (
                   <img src={logoPreview} alt="לוגו" style={{ maxWidth: "100%", maxHeight: 80, objectFit: "contain", borderRadius: 6 }} />
                 ) : (
                   <><div style={{ color: theme.primary, display: "flex" }}>{Icons.image}</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>לחץ להעלאת לוגו</div></>
                 )}
               </div>
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} onChange={handleLogoUpload} />
-              {logoPreview && !uploadingLogo && (
+              {logoPreview && (
                 <button onClick={handleRemoveLogo} style={{ alignSelf: "flex-start", background: "var(--colored-bg)", color: "#ef4444", border: "none", borderRadius: 7, padding: "4px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginTop: 6 }}>הסר לוגו</button>
               )}
             </Field>
