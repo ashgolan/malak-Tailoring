@@ -31,24 +31,26 @@ export function useCrud(queryKey, apiService) {
     onError: (e) => toast.error(getErrMsg(e)),
   });
 
+  // ✅ PATCH — بدون validation (للـ toggleApprove، toggleColor، etc.)
+  const patchMutation = useMutation({
+    mutationFn: ({ id, data }) => apiService.patch(id, data),
+    onSuccess: () => invalidate(),
+    onError: (e) => toast.error(getErrMsg(e)),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => apiService.remove(id),
     onSuccess: () => { toast.success("נמחק ✓"); invalidate(); },
     onError: (e) => toast.error(getErrMsg(e)),
   });
 
-  const toggleColorMutation = useMutation({
-    mutationFn: ({ id, data }) => apiService.patch(id, data),
-    onSuccess: () => invalidate(),
-    onError: (e) => toast.error(getErrMsg(e)),
-  });
-
   return {
     data,
     isLoading,
-    create: (body) => createMutation.mutate(body),
-    update: (id, data) => updateMutation.mutate({ id, data }),
-    remove: (id) => deleteMutation.mutate(id),
-    toggleColor: (id, data) => toggleColorMutation.mutate({ id, data }),
+    create:      (body)      => createMutation.mutate(body),
+    update:      (id, data)  => updateMutation.mutate({ id, data }),
+    patch:       (id, data)  => patchMutation.mutate({ id, data }),   // ✅ חדש
+    remove:      (id)        => deleteMutation.mutate(id),
+    toggleColor: (id, data)  => patchMutation.mutate({ id, data }),   // ✅ alias
   };
 }

@@ -12,60 +12,73 @@ import AutocompleteInput from "../components/ui/AutocompleteInput.jsx";
 const EMPTY = { date: today(), location: "", clientName: "", equipment: "", number: 0, colored: false, totalAmount: 0, tax: false };
 
 const COLS = [
-  { key: "totalAmount", label: "סה״כ", type: "money", width: "9%" },
-  { key: "tax", label: "שולם", type: "boolean", width: "6%" },
-  { key: "equipment", label: "עבודה", width: "14%" },
-  { key: "number", label: "סכום", type: "money", width: "8%" },
-  { key: "clientName", label: "קליינט", width: "17%" },
-  { key: "location", label: "מיקום", width: "17%" },
-  { key: "date", label: "תאריך", width: "9%" },
+  { key: "totalAmount", label: "סה״כ",   type: "money",   width: "9%"  },
+  { key: "tax",         label: "סטטוס",  type: "paid",    width: "7%"  },
+  { key: "equipment",   label: "עבודה",  width: "14%"  },
+  { key: "number",      label: "סכום",   type: "money",   width: "8%"  },
+  { key: "clientName",  label: "קליינט", width: "17%"  },
+  { key: "location",    label: "מיקום",  width: "17%"  },
+  { key: "date",        label: "תאריך",  width: "9%"   },
 ];
 
-export default function WorkersExpensesPage() {
-  const { theme } = useTheme();
-  const isMobile = useIsMobile();
-  const S = useStyles(theme);
-  const { data, isLoading, create, update, remove, toggleColor } = useCrud("workersExpenses", workersExpensesApi);
+// ─── helper: render tax cell ──────────────────────────────────
+const renderPaid = (v) =>
+  v ? <span style={{ color: "#16a34a", fontWeight: 700, fontSize: 11 }}>✓ שולם</span>
+    : <span style={{ color: "#ef4444", fontWeight: 600, fontSize: 11 }}>לא שולם</span>;
 
-  const [modal, setModal] = useState(false);
-  const [form, setForm] = useState(EMPTY);
-  const [search, setSearch] = useState("");
-  const [showAll, setShowAll] = useState(false);
-  const [editId, setEditId] = useState(null);
+export default function WorkersExpensesPage() {
+  const { theme }  = useTheme();
+  const isMobile   = useIsMobile();
+  const S          = useStyles(theme);
+  const { data, isLoading, create, update, remove, toggleColor } =
+    useCrud("workersExpenses", workersExpensesApi);
+
+  const [modal,    setModal]    = useState(false);
+  const [form,     setForm]     = useState(EMPTY);
+  const [search,   setSearch]   = useState("");
+  const [showAll,  setShowAll]  = useState(false);
+  const [editId,   setEditId]   = useState(null);
   const [editVals, setEditVals] = useState({});
 
-  const currentYear = new Date().getFullYear();
-  const allClients = [...new Set((data || []).map(i => i.clientName).filter(Boolean))].sort();
+  const currentYear  = new Date().getFullYear();
+  const allClients   = [...new Set((data || []).map(i => i.clientName).filter(Boolean))].sort();
   const allLocations = [...new Set((data || []).map(i => i.location).filter(Boolean))].sort();
   const allEquipment = [...new Set((data || []).map(i => i.equipment).filter(Boolean))].sort();
 
   const filtered = [...(data || [])]
     .filter(item => {
-      if (!showAll) { if (!item.date) return item.colored; if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false; }
-      if (search) { const s = search.toLowerCase(); return ["clientName", "location", "equipment"].some(f => String(item[f] || "").toLowerCase().includes(s)); }
+      if (!showAll) {
+        if (!item.date) return item.colored;
+        if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false;
+      }
+      if (search) {
+        const s = search.toLowerCase();
+        return ["clientName", "location", "equipment"].some(f => String(item[f] || "").toLowerCase().includes(s));
+      }
       return true;
     })
     .sort((a, b) => a.date < b.date ? 1 : -1);
 
   const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
-  const val = (k) => editId ? (editVals[k] ?? "") : form[k];
-  const set = (k, v) => editId ? setEditVals(p => ({ ...p, [k]: v })) : setForm(p => ({ ...p, [k]: v }));
+  const val   = (k) => editId ? (editVals[k] ?? "") : form[k];
+  const set   = (k, v) => editId ? setEditVals(p => ({ ...p, [k]: v })) : setForm(p => ({ ...p, [k]: v }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // ✅ totalAmount = number בלבד — אין מע״מ
     const extra = { totalAmount: Number(val("number")) };
     if (editId) { update(editId, { ...editVals, ...extra }); setEditId(null); }
     else create({ ...form, ...extra });
-    setModal(false); setForm(EMPTY);
+    setModal(false);
+    setForm(EMPTY);
   };
 
-  const mobileCols = COLS.map(col => col.key === "tax"
-    ? {
-      ...col, render: v => v
-        ? <span style={{ color: "#16a34a", fontWeight: 600 }}>שולם</span>
-        : <span style={{ color: "#ef4444", fontWeight: 600 }}>לא שולם</span>
-    }
-    : col);
+  // ✅ Mobile: שולם / לא שולם
+  const mobileCols = COLS.map(col =>
+    col.key === "tax"
+      ? { ...col, render: v => renderPaid(v) }
+      : col
+  );
 
   if (isLoading) return (
     <div style={{ display: "flex", justifyContent: "center", padding: 80 }}>
@@ -130,6 +143,7 @@ export default function WorkersExpensesPage() {
           onDelete={id => remove(id)} onToggleColor={toggleColor} total={total} theme={theme} />
       ) : (
         <div style={S.card}>
+          {/* Header row */}
           <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", width: "100%", background: theme.gradient, color: "#fff" }}>
             <div style={{ width: 70, minWidth: 70, padding: "12px 8px", fontSize: 12, fontWeight: 700, textAlign: "center", flexShrink: 0 }}>פעולות</div>
             {COLS.map(col => (
@@ -139,13 +153,15 @@ export default function WorkersExpensesPage() {
           </div>
 
           {filtered.length === 0 ? (
-            <div style={S.empty}><div style={{ fontSize: 32, marginBottom: 12 }}>👷</div><div>אין רשומות להצגה</div></div>
+            <div style={S.empty}><div style={{ fontSize: 32, marginBottom: 12 }}>👷</div><div>אין רשומות</div></div>
           ) : filtered.map((item, idx) => {
             const isEditing = editId === item._id;
             return (
               <div key={item._id} style={S.row(item.colored, idx)}
                 onMouseEnter={e => { if (!item.colored) e.currentTarget.style.background = "var(--bg-hover)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = item.colored ? "var(--colored-bg)" : idx % 2 === 0 ? "var(--bg-card)" : "var(--bg-card-alt)"; }}>
+
+                {/* Actions */}
                 <div style={{ width: 70, minWidth: 70, padding: "10px 8px", display: "flex", gap: 4, justifyContent: "center", flexShrink: 0 }}>
                   {isEditing ? (<>
                     <button onClick={() => { update(editId, { ...editVals, totalAmount: Number(editVals.number) }); setEditId(null); }} style={S.btnSave}>✓</button>
@@ -155,32 +171,47 @@ export default function WorkersExpensesPage() {
                     <button onClick={() => { if (window.confirm("האם אתה בטוח שברצונך למחוק?")) remove(item._id); }} style={S.btnDelete}>🗑</button>
                   </>)}
                 </div>
+
+                {/* Cells */}
                 {COLS.map(col => (
                   <div key={col.key} style={S.cell(col.width, {
                     color: item.colored ? "var(--colored-text)" : col.type === "money" ? theme.primary : "var(--text-1)",
-                    fontWeight: col.type === "money" ? 600 : col.key === "clientName" ? 600 : 400,
+                    fontWeight: col.type === "money" ? 600 : 400,
                   })}>
-                    {isEditing ? (
-                      col.type === "boolean" ? (
-                        <div onClick={() => setEditVals(v => ({ ...v, [col.key]: !v[col.key] }))} style={{ position: "relative", width: 36, height: 20, cursor: "pointer" }}>
-                          <div style={{ position: "absolute", inset: 0, borderRadius: 20, background: editVals[col.key] ? theme.primary : "var(--border)", transition: "0.2s" }}>
-                            <div style={{ position: "absolute", top: 2, right: editVals[col.key] ? 2 : 18, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "0.2s" }} />
-                          </div>
+                    {isEditing && col.key !== "tax" ? (
+                      <input
+                        type={col.type === "money" ? "number" : "text"}
+                        value={editVals[col.key] ?? ""}
+                        onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))}
+                        style={{ width: "100%", border: `1px solid ${theme.accent}`, borderRadius: 6, padding: "2px 6px", fontSize: 12, outline: "none", fontFamily: "inherit", background: "var(--bg-input)", color: "var(--text-1)" }}
+                      />
+                    ) : isEditing && col.key === "tax" ? (
+                      // ✅ toggle בעריכה
+                      <div style={{ position: "relative", width: 32, height: 18 }}>
+                        <div onClick={() => setEditVals(v => ({ ...v, tax: !v.tax }))}
+                          style={{ position: "absolute", inset: 0, borderRadius: 18, cursor: "pointer", background: editVals.tax ? theme.primary : "var(--border)", transition: "0.2s" }}>
+                          <div style={{ position: "absolute", top: 2, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "0.2s", right: editVals.tax ? 2 : 16 }} />
                         </div>
-                      ) : (
-                        <input type={col.type === "money" ? "number" : "text"} value={editVals[col.key] ?? ""} onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))} style={{ width: "100%", border: `1px solid ${theme.accent}`, borderRadius: 6, padding: "2px 6px", fontSize: 12, outline: "none", fontFamily: "inherit", background: "var(--bg-input)", color: "var(--text-1)" }} />
-                      )
+                      </div>
+                    ) : col.type === "paid" ? (
+                      // ✅ תצוגה: שולם / לא שולם
+                      renderPaid(item[col.key])
+                    ) : col.type === "money" ? (
+                      fmt(item[col.key])
                     ) : (
-                      col.type === "boolean" ? (item[col.key] ? <span style={{ color: "#16a34a", fontWeight: 600, fontSize: 11 }}>✓ מע״מ</span> : <span style={{ color: "var(--text-4)", fontSize: 11 }}>ללא</span>) : col.type === "money" ? fmt(item[col.key]) : (item[col.key] || "-")
+                      item[col.key] || "-"
                     )}
                   </div>
                 ))}
+
+                {/* Color dot */}
                 <div style={{ width: 30, minWidth: 30, display: "flex", justifyContent: "center", flexShrink: 0 }}>
                   <div onClick={() => toggleColor(item._id, { colored: !item.colored })} style={S.dot(item.colored)} />
                 </div>
               </div>
             );
           })}
+
           {filtered.length > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "var(--bg-hover)", borderTop: `2px solid ${theme.primaryBorder}` }}>
               <span style={{ fontSize: 13, color: "var(--text-3)" }}>סה״כ ({filtered.length} רשומות)</span>
@@ -220,15 +251,20 @@ export default function WorkersExpensesPage() {
               <input type="number" value={val("number")} onChange={e => set("number", e.target.value)}
                 min="0" style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
-            {/* Tax toggle */}
+            {/* ✅ Toggle שולם — לא מע״מ */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>
               <div style={{ position: "relative", width: 36, height: 20 }}>
                 <div onClick={() => set("tax", !val("tax"))}
-                  style={{ position: "absolute", inset: 0, borderRadius: 20, cursor: "pointer", transition: "0.2s", background: val("tax") ? theme.primary : "var(--border)" }}>
+                  style={{ position: "absolute", inset: 0, borderRadius: 20, cursor: "pointer", transition: "0.2s", background: val("tax") ? "#16a34a" : "var(--border)" }}>
                   <div style={{ position: "absolute", top: 2, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "0.2s", right: val("tax") ? 2 : 18 }} />
                 </div>
               </div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>שולם</label>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>שולם לעובד</div>
+                <div style={{ fontSize: 11, color: val("tax") ? "#16a34a" : "var(--text-4)" }}>
+                  {val("tax") ? "✓ הסכום שולם" : "טרם שולם"}
+                </div>
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 10 }}>

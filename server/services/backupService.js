@@ -1,21 +1,23 @@
 import AdmZip from "adm-zip";
 import nodemailer from "nodemailer";
 
-import { Sale }           from "../models/sale.model.js";
-import { BouncedCheck }   from "../models/bouncedChecks.model.js";
-import { WorkerExpenses } from "../models/workersExpenses.model.js";
-import { Waybill }        from "../models/waybill.model.js";
-import { PartialPayment } from "../models/partialPayment.model.js";
-import { InstitutionTax } from "../models/institutionTax.model.js";
-import { SaleToCompany }  from "../models/salesToCompany.model.js";
-import { Expense }        from "../models/expenses.model.js";
-import { SleevesBid }     from "../models/sleevesBid.model.js";
-import { Bid }            from "../models/bid.model.js";
-import { Inventory }      from "../models/inventory.model.js";
-import { Provider }       from "../models/provider.model.js";
-import { Contact }        from "../models/contact.model.js";
-import { User }           from "../models/user.model.js";
-import { Setting }        from "../models/setting.model.js";
+import { Sale }             from "../models/sale.model.js";
+import { BouncedCheck }     from "../models/bouncedChecks.model.js";
+import { WorkerExpenses }   from "../models/workersExpenses.model.js";
+import { Waybill }          from "../models/waybill.model.js";
+import { PartialPayment }   from "../models/partialPayment.model.js";
+import { InstitutionTax }   from "../models/institutionTax.model.js";
+import { SaleToCompany }    from "../models/salesToCompany.model.js";
+import { Expense }          from "../models/expenses.model.js";
+import { SleevesBid }       from "../models/sleevesBid.model.js";
+import { Bid }              from "../models/bid.model.js";
+import { Inventory }        from "../models/inventory.model.js";
+import { Provider }         from "../models/provider.model.js";
+import { Contact }          from "../models/contact.model.js";
+import { User }             from "../models/user.model.js";
+import { Setting }          from "../models/setting.model.js";
+import { CompanyWithTask }  from "../models/company.model.js";
+import { Task }             from "../models/taskOfCompany.model.js";
 
 const COLLECTIONS = [
   { name: "sales",            Model: Sale            },
@@ -31,17 +33,18 @@ const COLLECTIONS = [
   { name: "inventories",      Model: Inventory       },
   { name: "providers",        Model: Provider        },
   { name: "contacts",         Model: Contact         },
+  { name: "tasks",            Model: Task            },
+  { name: "companies",        Model: CompanyWithTask  },
   { name: "users",            Model: User            },
   { name: "settings",         Model: Setting         },
 ];
 
-// ─── Create ZIP buffer ─────────────────────────────────────────
 export async function createBackupZip() {
   const zip = new AdmZip();
 
   const meta = {
     createdAt: new Date().toISOString(),
-    version: "2.0",
+    version: "2.1",
     app: "מתפרת מלאק",
     collections: COLLECTIONS.map(c => c.name),
   };
@@ -55,7 +58,6 @@ export async function createBackupZip() {
   return zip.toBuffer();
 }
 
-// ─── Restore from ZIP buffer ───────────────────────────────────
 export async function restoreFromZip(zipBuffer) {
   const results = {};
   const zip = new AdmZip(zipBuffer);
@@ -91,7 +93,6 @@ export async function restoreFromZip(zipBuffer) {
   return results;
 }
 
-// ─── Send backup email ─────────────────────────────────────────
 export async function sendBackupEmail() {
   try {
     const zipBuffer = await createBackupZip();
@@ -127,7 +128,6 @@ export async function sendBackupEmail() {
       }],
     });
 
-    console.log("✅ Backup email sent");
     return true;
   } catch (err) {
     console.error("❌ Backup failed:", err.message);
