@@ -146,7 +146,8 @@ export default function ChartsPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: theme.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📊</div>
           <div><h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", margin: 0 }}>דוחות</h1>
-            <p style={{ fontSize: 13, color: "var(--text-4)", margin: "3px 0 0" }}>הפקת דוחות לפי סינון</p></div>
+            <p style={{ fontSize: 13, color: "var(--text-4)", margin: "3px 0 0" }}>הפקת דוחות מפורטים לפי סינון</p>
+          </div>
         </div>
         <button onClick={handlePrint}
           style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
