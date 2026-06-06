@@ -16,7 +16,7 @@ const COLS = [
   { key: "tax",         label: "סטטוס",  type: "paid",    width: "7%"  },
   { key: "equipment",   label: "עבודה",  width: "14%"  },
   { key: "number",      label: "סכום",   type: "money",   width: "8%"  },
-  { key: "clientName",  label: "קליינט", width: "17%"  },
+  { key: "clientName",  label: "עובד", width: "17%"  },
   { key: "location",    label: "מיקום",  width: "17%"  },
   { key: "date",        label: "תאריך",  width: "9%"   },
 ];
@@ -232,7 +232,7 @@ export default function WorkersExpensesPage() {
                 style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
             <div>
-              <label style={S.label}>קליינט</label>
+              <label style={S.label}>עובד</label>
               <AutocompleteInput value={val("clientName")} onChange={e => set("clientName", e.target.value)}
                 suggestions={allClients} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
