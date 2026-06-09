@@ -41,7 +41,7 @@ export default function InventoriesPage() {
               :(<><button onClick={()=>{setEditId(item._id);setEditVals({...item});}} style={S.btnEdit}>✎</button><button onClick={()=>{if(window.confirm("האם אתה בטוח שברצונך למחוק?"))remove(item._id);}} style={S.btnDelete}>🗑</button></>)}
             </div>
             <div style={S.cell("40%",{color:theme.primary,fontWeight:600})}>
-              {isEditing?<input type="number" min="0" value={editVals.number??""} onChange={e=>setEditVals(v=>({...v,number:e.target.value}))} style={{width:"100%",border:`1px solid ${theme.accent}`,borderRadius:6,padding:"2px 6px",fontSize:12,outline:"none",fontFamily:"inherit",background:"var(--bg-input)",color:"var(--text-1)"}}/>:fmt(item.number)}
+              {isEditing?<input type="number" min="0" step="any" value={editVals.number??""} onChange={e=>setEditVals(v=>({...v,number:e.target.value}))} style={{width:"100%",border:`1px solid ${theme.accent}`,borderRadius:6,padding:"2px 6px",fontSize:12,outline:"none",fontFamily:"inherit",background:"var(--bg-input)",color:"var(--text-1)"}}/>:fmt(item.number)}
             </div>
             <div style={S.cell("60%",{fontWeight:500,color:"var(--text-1)"})}>
               {isEditing?<input type="text" value={editVals.name??""} onChange={e=>setEditVals(v=>({...v,name:e.target.value}))} style={{width:"100%",border:`1px solid ${theme.accent}`,borderRadius:6,padding:"2px 6px",fontSize:12,outline:"none",fontFamily:"inherit",background:"var(--bg-input)",color:"var(--text-1)"}}/>:item.name}
@@ -52,7 +52,7 @@ export default function InventoriesPage() {
       <Modal isOpen={modal} onClose={()=>{setModal(false);setForm({name:"",number:0});}} title="הוספת מוצר למלאי" size="sm">
         <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:14}}>
           <div><label style={S.label}>שם מוצר / עבודה</label><input type="text" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} required style={S.input} onFocus={e=>fo(e,theme.accent)} onBlur={bl}/></div>
-          <div><label style={S.label}>מחיר ₪</label><input type="number" min="0" value={form.number} onChange={e=>setForm(p=>({...p,number:e.target.value}))} style={S.input} onFocus={e=>fo(e,theme.accent)} onBlur={bl}/></div>
+          <div><label style={S.label}>מחיר ₪</label><input type="number" min="0" step="any" value={form.number} onChange={e=>setForm(p=>({...p,number:e.target.value}))} style={S.input} onFocus={e=>fo(e,theme.accent)} onBlur={bl}/></div>
           <div style={{display:"flex",gap:10}}><button type="button" onClick={()=>setModal(false)} style={S.btnCancel}>ביטול</button><button type="submit" style={S.btnSubmit(theme)}>שמור</button></div>
         </form>
       </Modal>
