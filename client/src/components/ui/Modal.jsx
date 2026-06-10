@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 export default function Modal({ isOpen, onClose, title, children, size = "md" }) {
+  const mouseDownTarget = useRef(null);
+
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -12,7 +14,11 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" })
   const maxW = { sm: 420, md: 540, lg: 680, xl: 900 }[size] || 540;
 
   return (
-    <div className="rosh-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div
+      className="rosh-overlay"
+      onMouseDown={e => { mouseDownTarget.current = e.target; }}
+      onMouseUp={e => { if (mouseDownTarget.current === e.currentTarget && e.target === e.currentTarget) onClose(); }}
+    >
       <div className="rosh-modal" style={{ width: "100%", maxWidth: maxW, maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
         <div className="rosh-modal-header">
           <h2 className="rosh-modal-title">{title}</h2>
