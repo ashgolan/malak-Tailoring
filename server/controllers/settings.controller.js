@@ -29,7 +29,7 @@ export const uploadLogoHandler = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "לא נמצא קובץ" });
     const logoUrl = `/uploads/logos/${req.file.filename}`;
-    let settings = await Setting.findOne({ createdBy: req.user._id });
+    let settings = await Setting.findOne({});
     if (!settings) settings = await Setting.create({ createdBy: req.user._id });
     settings.logoUrl = logoUrl;
     await settings.save();
@@ -42,7 +42,7 @@ export const uploadLogoHandler = async (req, res) => {
 // ─── Get settings ──────────────────────────────────────────────
 export const getMySettings = async (req, res) => {
   try {
-    let settings = await Setting.findOne({ createdBy: req.user._id });
+    let settings = await Setting.findOne({});
     if (!settings) {
       settings = await Setting.create({
         createdBy: req.user._id,
@@ -69,7 +69,7 @@ export const updateMySettings = async (req, res) => {
       transportOptions, sendingOptions,
     } = req.body;
 
-    let settings = await Setting.findOne({ createdBy: req.user._id });
+    let settings = await Setting.findOne({});
     if (!settings) settings = await Setting.create({ createdBy: req.user._id });
 
     if (storeName !== undefined) settings.storeName = storeName?.trim() || "";
