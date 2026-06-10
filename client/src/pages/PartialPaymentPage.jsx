@@ -1,5 +1,5 @@
 import { fmt, fo, bl, today } from "../utils/formatters.js";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useCrud } from "../hooks/useCrud";
 import { partialPaymentApi } from "../api";
 import { useTheme } from "../context/ThemeContext";
@@ -21,16 +21,33 @@ const COLS = [
 ];
 
 // ─── Payments Modal ────────────────────────────────────────────
-function PaymentsModal({ item, onClose, onAddPayment, theme, S }) {
+function PaymentsModal({ item, onClose, onAddPayment, onUpdatePayments, theme, S }) {
+  const mouseDownTarget = useRef(null);
   const [payForm, setPayForm] = useState({ amount: 0, date: today(), note: "-" });
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editingVal, setEditingVal] = useState({});
+
   const payments = item.payments || [];
   const legacyAdvance = payments.length === 0 ? Number(item.advanceAmount || 0) : 0;
   const paid = payments.reduce((s, p) => s + Number(p.amount || 0), 0) + legacyAdvance;
   const balance = Number(item.totalAmount || 0) - paid;
 
+  const handleDelete = (idx) => {
+    if (!window.confirm("האם אתה בטוח שברצונך למחוק תשלום זה?")) return;
+    const newP = payments.filter((_, i) => i !== idx);
+    onUpdatePayments(item._id, newP);
+  };
+
+  const handleEditSave = (idx) => {
+    const newP = payments.map((p, i) => i === idx ? { ...p, ...editingVal, amount: Number(editingVal.amount ?? p.amount) } : p);
+    onUpdatePayments(item._id, newP);
+    setEditingIdx(null);
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16, backdropFilter: "blur(2px)" }}
-      onClick={e => e.target === e.currentTarget && onClose()}>
+      onMouseDown={e => { mouseDownTarget.current = e.target; }}
+      onMouseUp={e => { if (mouseDownTarget.current === e.currentTarget && e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: "var(--bg-modal)", borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto", padding: 28, boxShadow: "var(--shadow-modal)", direction: "rtl", border: "1px solid var(--border)" }}>
 
         {/* Header */}
@@ -43,7 +60,7 @@ function PaymentsModal({ item, onClose, onAddPayment, theme, S }) {
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
           {[
-            { label: "סה״כ לתשלום", value: `${fmt(item.totalAmount)} ₪`, color: "var(--text-1)" },
+            { label: "סה״כ לתשלום", value: `${fmt(item.totalAmount)} ₪`, color: theme.primary },
             { label: "שולם עד כה", value: `${fmt(paid)} ₪`, color: "#16a34a" },
             { label: "יתרה", value: `${fmt(balance)} ₪`, color: balance > 0 ? "#ef4444" : "#16a34a" },
           ].map((s, i) => (
@@ -88,12 +105,61 @@ function PaymentsModal({ item, onClose, onAddPayment, theme, S }) {
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)", marginBottom: 10 }}>היסטוריית תשלומים</div>
             {payments.map((p, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "var(--bg-card-alt)", borderRadius: 8, marginBottom: 6, border: "1px solid var(--border)" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: theme.primary }}>{fmt(p.amount)} ₪</div>
-                  <div style={{ fontSize: 11, color: "var(--text-4)" }}>{p.note}</div>
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text-4)" }}>{p.date}</div>
+              <div key={i} style={{ background: "var(--bg-card-alt)", borderRadius: 8, marginBottom: 6, border: "1px solid var(--border)", overflow: "hidden" }}>
+                {editingIdx === i ? (
+                  // ─── Edit mode ───────────────────────────
+                  <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div>
+                        <label style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>סכום</label>
+                        <input type="number" min="0" value={editingVal.amount ?? p.amount}
+                          onChange={e => setEditingVal(v => ({ ...v, amount: e.target.value }))}
+                          style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>תאריך</label>
+                        <input type="date" value={editingVal.date ?? p.date}
+                          onChange={e => setEditingVal(v => ({ ...v, date: e.target.value }))}
+                          style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+                      </div>
+                      <div style={{ gridColumn: "1/-1" }}>
+                        <label style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>הערה</label>
+                        <input type="text" value={editingVal.note ?? p.note}
+                          onChange={e => setEditingVal(v => ({ ...v, note: e.target.value }))}
+                          style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => handleEditSave(i)}
+                        style={{ flex: 2, padding: "8px", background: theme.gradient, color: "#fff", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                        ✓ שמור
+                      </button>
+                      <button onClick={() => setEditingIdx(null)}
+                        style={{ flex: 1, padding: "8px", background: "var(--btn-cancel-bg)", color: "var(--btn-cancel-text)", border: "1px solid var(--btn-cancel-bdr)", borderRadius: 7, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+                        ביטול
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // ─── View mode ───────────────────────────
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: theme.primary }}>{fmt(p.amount)} ₪</div>
+                      <div style={{ fontSize: 11, color: "var(--text-4)" }}>{p.note}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ fontSize: 12, color: "var(--text-4)" }}>{p.date}</div>
+                      <button onClick={() => { setEditingIdx(i); setEditingVal({ amount: p.amount, date: p.date, note: p.note }); }}
+                        style={{ padding: "3px 8px", background: theme.primaryLight, border: `1px solid ${theme.primaryBorder}`, borderRadius: 6, color: theme.primary, cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
+                        ✎
+                      </button>
+                      <button onClick={() => handleDelete(i)}
+                        style={{ padding: "3px 8px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 6, color: "#ef4444", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -160,6 +226,11 @@ export default function PartialPaymentPage() {
     const newP = [...existingPayments, payForm];
     update(id, { payments: newP, advanceAmount: 0 });
     setPaymentsModal(prev => prev ? { ...prev, payments: newP, advanceAmount: 0 } : null);
+  };
+
+  const handleUpdatePayments = (id, newPayments) => {
+    update(id, { payments: newPayments });
+    setPaymentsModal(prev => prev ? { ...prev, payments: newPayments } : null);
   };
 
   const handleSubmit = (e) => {
@@ -276,8 +347,11 @@ export default function PartialPaymentPage() {
                     val = `${fmt(balance)} ₪`;
                     color = balance > 0 ? "#ef4444" : "#16a34a";
                     fw = 700;
-                  } else if (col.key === "totalAmount" || col.key === "advanceAmount") {
+                  } else if (col.key === "totalAmount") {
                     val = `${fmt(item[col.key])} ₪`;
+                    color = theme.primary; fw = 600;
+                  } else if (col.key === "advanceAmount") {
+                    val = `${fmt(getPaid(item))} ₪`;
                     color = theme.primary; fw = 600;
                   } else if (col.key === "clientName") {
                     val = item[col.key] || "-"; fw = 600;
@@ -289,7 +363,7 @@ export default function PartialPaymentPage() {
                   return (
                     <div key={col.key} style={S.cell(col.width, { color, fontWeight: fw })}>
                       {isEditing && col.key !== "balance" ? (
-                        <input type={col.key === "totalAmount" || col.key === "advanceAmount" ? "number" : "text"}
+                        <input type={col.key === "totalAmount" ? "number" : "text"}
                           value={editVals[col.key] ?? ""} onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))}
                           style={{ width: "100%", border: `1px solid ${theme.accent}`, borderRadius: 6, padding: "2px 6px", fontSize: 12, outline: "none", fontFamily: "inherit", background: "var(--bg-input)", color: "var(--text-1)" }} />
                       ) : val}
@@ -367,7 +441,7 @@ export default function PartialPaymentPage() {
       {/* Payments Modal */}
       {paymentsModal && (
         <PaymentsModal item={paymentsModal} onClose={() => setPaymentsModal(null)}
-          onAddPayment={handleAddPayment} theme={theme} S={S} />
+          onAddPayment={handleAddPayment} onUpdatePayments={handleUpdatePayments} theme={theme} S={S} />
       )}
     </div>
   );
