@@ -315,8 +315,8 @@ export default function SalesPage() {
             ].map(f => (
               <div key={f.key}>
                 <label style={S.label}>{f.label}</label>
-                <input type={f.type || "number"} value={form[f.key]} onChange={e => setField(f.key, f.type === "text" ? e.target.value : e.target.value)} min={f.type !== "text" ? 0 : undefined}
-                  style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+                <input type={f.type || "number"} value={form[f.key]} onChange={e => setField(f.key, f.type === "text" ? e.target.value : e.target.value)} min={f.type !== "text" ? 0 : undefined} step={f.type !== "text" ? "any" : undefined}
+                  style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />                  style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
               </div>
             ))}
 

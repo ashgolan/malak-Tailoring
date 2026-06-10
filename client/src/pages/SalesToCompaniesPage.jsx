@@ -18,8 +18,8 @@ const COLS = [
   { key: "totalAmount", label: "סה״כ", type: "money", width: "8%" },
   { key: "afterTax", label: "מע״מ", width: "6%" },
   { key: "sending", label: "משלוח", width: "8%" },
-  { key: "kindOfWork", label: "סוג הובלה", width: "9%" },
-  { key: "containersNumbers", label: "מס קונטינר", width: "9%" },
+  { key: "kindOfWork", label: "סוג מכולה", width: "9%" },
+  { key: "containersNumbers", label: "מס מכולה", width: "9%" },
   { key: "name", label: "עבודה", width: "14%" },
   { key: "clientName", label: "חברה", width: "15%" },
   { key: "date", label: "תאריך", width: "9%" },
@@ -145,7 +145,7 @@ export default function SalesToCompaniesPage() {
         </div>
       </div>
 
-      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי חברה, עבודה, הובלה..." style={S.inputLg} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+      <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי חברה, עבודה, מכולה..." style={S.inputLg} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
 
       {isMobile ? (
         <MobileCards items={filtered} columns={mobileCols} onEdit={item => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }} onDelete={id => remove(id)} onToggleColor={toggleColor} total={total} theme={theme} />
@@ -199,12 +199,12 @@ export default function SalesToCompaniesPage() {
               <label style={S.label}>עבודה</label>
               <AutocompleteInput value={val("name")} onChange={e => set("name", e.target.value)} suggestions={allWorks} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
             </div>
-            <div><label style={S.label}>מס׳ קונטינר</label><input type="text" value={val("containersNumbers")} onChange={e => set("containersNumbers", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+            <div><label style={S.label}>מס׳ מכולה</label><input type="text" value={val("containersNumbers")} onChange={e => set("containersNumbers", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
 
-            {/* סוג הובלה */}
+            {/* סוג מכולה */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <label style={{ ...S.label, marginBottom: 0 }}>סוג הובלה</label>
+                <label style={{ ...S.label, marginBottom: 0 }}>סוג מכולה</label>
                 <button type="button" onClick={() => setManageTransport(true)}
                   style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-tag)", color: "var(--text-3)", cursor: "pointer", fontFamily: "inherit" }}>
                   ⚙️ ניהול
@@ -250,7 +250,7 @@ export default function SalesToCompaniesPage() {
 
       {/* List Manager Modals */}
       <ListManagerModal isOpen={manageTransport} onClose={() => setManageTransport(false)}
-        title="סוג הובלה" items={transportOptions} onSave={saveTransport} theme={theme} S={S} />
+        title="סוג מכולה" items={transportOptions} onSave={saveTransport} theme={theme} S={S} />
       <ListManagerModal isOpen={manageSending} onClose={() => setManageSending(false)}
         title="משלוח" items={sendingOptions} onSave={saveSending} theme={theme} S={S} />
     </div>

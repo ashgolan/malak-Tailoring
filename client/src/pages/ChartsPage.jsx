@@ -46,7 +46,7 @@ const REPORTS = [
   },
   {
     key: "salesToCompanies", label: "מכירות לחברות", icon: "🏢", api: salesToCompaniesApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "חברה" }, { key: "name", label: "עבודה" }, { key: "kindOfWork", label: "הובלה" }, { key: "sending", label: "משלוח" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
+    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "חברה" }, { key: "name", label: "עבודה" }, { key: "kindOfWork", label: "מכולה" }, { key: "sending", label: "משלוח" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
     searchFields: ["clientName", "name"], totalField: "totalAmount"
   },
   {
