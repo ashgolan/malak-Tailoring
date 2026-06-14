@@ -92,6 +92,31 @@ function ClientAutocomplete({ value, onChange, allClients, accent }) {
   );
 }
 
+// ─── Shared calculation helper ──────────────────────────────────
+// منطق الحساب: (מחיר - הנחה%) × כמות - הוצאות = base
+// إذا tax=true → totalAmount = base + מע״מ على base
+// sale = מחיר بعد الخصم (لسطر واحد، بدون כמות)
+const calcRow = (vals, maam) => {
+  const num = Number(vals.number) || 0;
+  const disc = Number(vals.discount) || 0;
+  const qty = Number(vals.quantity) || 1;
+  const exp = Number(vals.expenses) || 0;
+  const saleVal = num - (num * disc) / 100;
+  const base = saleVal * qty - exp;
+  const totalAmount = vals.tax ? Math.round(base * (1 + maam / 100)) : base;
+  return { sale: saleVal, totalAmount };
+};
+
+// المبلغ "قبل מע״מ" لسطر معين — يُستخدم لحساب الإجمالي بالشريط العلوي
+const preTaxAmount = (item) => {
+  const num = Number(item.number) || 0;
+  const disc = Number(item.discount) || 0;
+  const qty = Number(item.quantity) || 1;
+  const exp = Number(item.expenses) || 0;
+  const saleVal = num - (num * disc) / 100;
+  return saleVal * qty - exp;
+};
+
 export default function SalesPage() {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
@@ -117,26 +142,43 @@ export default function SalesPage() {
     })
     .sort((a, b) => a.date < b.date ? 1 : -1);
 
-  const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
+  // ✅ "סה״כ" בשורת הסטטיסטיקה = מחיר אחרי הנחה × כמות - הוצאות (לפני מע״מ), לכל השורות המסוננות
+  const total = filtered.reduce((s, i) => s + preTaxAmount(i), 0);
+  const totalExpenses = filtered.reduce((s, i) => s + (Number(i.expenses) || 0), 0);
   const allClients = [...new Set((data || []).map(s => s.clientName).filter(Boolean))].sort();
   const allNames = [...new Set((data || []).map(s => s.name).filter(Boolean))].sort();
 
   const setField = (key, val) => {
     setForm(prev => {
       const u = { ...prev, [key]: val };
-      const num = Number(u.number) || 0, disc = Number(u.discount) || 0, qty = Number(u.quantity) || 1, exp = Number(u.expenses) || 0;
-      const saleVal = num - (num * disc) / 100;
-      u.sale = saleVal;
-      const base = saleVal * qty - exp;
-      u.totalAmount = u.tax ? Math.round(base * (1 + maam / 100)) : base;
+      const { sale, totalAmount } = calcRow(u, maam);
+      u.sale = sale;
+      u.totalAmount = totalAmount;
+      return u;
+    });
+  };
+
+  // ✅ עדכון שדה בעת עריכה — מחשב מחדש sale ו-totalAmount בכל שינוי
+  const setEditField = (key, val) => {
+    setEditVals(prev => {
+      const u = { ...prev, [key]: val };
+      const { sale, totalAmount } = calcRow(u, maam);
+      u.sale = sale;
+      u.totalAmount = totalAmount;
       return u;
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (editId) { update(editId, editVals); setEditId(null); }
-    else create(form);
+    if (editId) {
+      // ✅ أعد حساب sale و totalAmount قبل الحفظ
+      const { sale, totalAmount } = calcRow(editVals, maam);
+      update(editId, { ...editVals, sale, totalAmount });
+      setEditId(null);
+    } else {
+      create(form);
+    }
     setModal(false); setForm(EMPTY);
   };
 
@@ -176,7 +218,7 @@ export default function SalesPage() {
           <div style={S.divider} />
           <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>רשומות</span><span style={{ fontSize: 18, fontWeight: 700, color: "var(--text-3)" }}>{filtered.length}</span></div>
           <div style={S.divider} />
-          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>הוצאות</span><span style={{ fontSize: 18, fontWeight: 700, color: "#ef4444" }}>{fmt(filtered.reduce((s, i) => s + (Number(i.expenses) || 0), 0))} ₪</span></div>
+          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>הוצאות</span><span style={{ fontSize: 18, fontWeight: 700, color: "#ef4444" }}>{fmt(totalExpenses)} ₪</span></div>
         </div>
       )}
 
@@ -228,13 +270,17 @@ export default function SalesPage() {
                   })}>
                     {isEditing ? (
                       col.type === "boolean" ? (
-                        <div onClick={() => setEditVals(v => ({ ...v, [col.key]: !v[col.key] }))} style={{ position: "relative", width: 36, height: 20, cursor: "pointer" }}>
+                        <div onClick={() => setEditField(col.key, !editVals[col.key])} style={{ position: "relative", width: 36, height: 20, cursor: "pointer" }}>
                           <div style={{ position: "absolute", inset: 0, borderRadius: 20, background: editVals[col.key] ? theme.primary : "var(--border)", transition: "0.2s" }}>
                             <div style={{ position: "absolute", top: 2, right: editVals[col.key] ? 2 : 18, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "0.2s" }} />
                           </div>
                         </div>
+                      ) : (col.key === "sale" || col.key === "totalAmount") ? (
+                        // ✅ sale ו-totalAmount מחושבים אוטומטית — לא ניתנים לעריכה ישירה
+                        <span>{fmt(editVals[col.key])}</span>
                       ) : (
-                        <input type={col.type === "number" ? "number" : "text"} value={editVals[col.key] ?? ""} onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))}
+                        <input type={col.type === "number" ? "number" : "text"} step={col.type === "number" ? "any" : undefined}
+                          value={editVals[col.key] ?? ""} onChange={e => setEditField(col.key, e.target.value)}
                           style={{ width: "100%", border: `1px solid ${theme.accent}`, borderRadius: 6, padding: "2px 6px", fontSize: 12, outline: "none", fontFamily: "inherit", background: "var(--bg-input)", color: "var(--text-1)" }} />
                       )
                     ) : (

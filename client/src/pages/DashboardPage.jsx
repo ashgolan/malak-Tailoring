@@ -20,6 +20,16 @@ function filterYear(data, year=currentYear) {
   return (data||[]).filter(i=>new Date(i.date).getFullYear()===year||i.colored);
 }
 
+// ✅ חישוב סכום לפני מע״מ עבור מכירות (sale × quantity - expenses)
+function preTaxSalesAmount(item) {
+  const num = Number(item.number) || 0;
+  const disc = Number(item.discount) || 0;
+  const qty = Number(item.quantity) || 1;
+  const exp = Number(item.expenses) || 0;
+  const saleVal = num - (num * disc) / 100;
+  return saleVal * qty - exp;
+}
+
 function StatCard({ title, value, icon:Icon, color, sub, onClick }) {
   return (
     <div onClick={onClick} style={{
@@ -82,7 +92,8 @@ export default function DashboardPage() {
   const expenses = useMemo(()=>filterYear(expensesData),[expensesData]);
   const partial  = useMemo(()=>filterYear(partialData), [partialData]);
 
-  const totalSales    = useMemo(()=>sales.reduce((s,i)=>s+(i.totalAmount||0),0),[sales]);
+  // ✅ totalSales = סכום כל המכירות לפני מע״מ
+  const totalSales    = useMemo(()=>sales.reduce((s,i)=>s+preTaxSalesAmount(i),0),[sales]);
   const totalExpenses = useMemo(()=>expenses.reduce((s,i)=>s+(i.totalAmount||0),0),[expenses]);
   const totalWorkers  = useMemo(()=>workers.reduce((s,i)=>s+(i.totalAmount||0),0),[workers]);
   const totalSleeves  = useMemo(()=>sleeves.reduce((s,i)=>s+(i.totalAmount||0),0),[sleeves]);
@@ -99,7 +110,7 @@ export default function DashboardPage() {
 
   const monthlyData = useMemo(()=>MONTHS_SHORT.map((m,i)=>({
     month:m,
-    "מכירות": sales.filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+(s.totalAmount||0),0),
+    "מכירות": sales.filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+preTaxSalesAmount(s),0),
     "הוצאות": [...expenses,...workers].filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+(s.totalAmount||0),0),
   })),[sales,expenses,workers]);
 
@@ -107,8 +118,8 @@ export default function DashboardPage() {
     const inMonth=(arr)=>arr.filter(i=>new Date(i.date).getMonth()===selectedMonth);
     if(selectedType==="הכנסות"||selectedType==="הכל"){
       return {
-        items: inMonth(sales).map(i=>({label:i.clientName||"-",value:i.totalAmount||0,type:"מכירה"})),
-        total: inMonth(sales).reduce((s,i)=>s+(i.totalAmount||0),0),
+        items: inMonth(sales).map(i=>({label:i.clientName||"-",value:preTaxSalesAmount(i),type:"מכירה"})),
+        total: inMonth(sales).reduce((s,i)=>s+preTaxSalesAmount(i),0),
       };
     }
     return {
