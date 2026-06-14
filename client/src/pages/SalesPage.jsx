@@ -214,7 +214,7 @@ export default function SalesPage() {
       {/* Stats */}
       {!isMobile && (
         <div style={S.statBar}>
-          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>סה״כ</span><span style={{ fontSize: 18, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span></div>
+          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>סה״כ (לאחר הוצאות)</span><span style={{ fontSize: 18, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span></div>
           <div style={S.divider} />
           <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>רשומות</span><span style={{ fontSize: 18, fontWeight: 700, color: "var(--text-3)" }}>{filtered.length}</span></div>
           <div style={S.divider} />
