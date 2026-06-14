@@ -8,10 +8,26 @@ import {
 import { useTheme } from "../context/ThemeContext";
 import { useStyles } from "../hooks/useStyles";
 import { getLogoHtml, getFooterHtml, printViaIframe, PRINT_CSS } from "../utils/printHelper";
+
 const fmt = (n) => Number(n || 0).toLocaleString("he-IL", { maximumFractionDigits: 2 });
 const MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
 const currentYear = new Date().getFullYear();
 const YEARS = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3];
+
+// ✅ حساب المبلغ قبل מע״מ حسب نوع التقرير
+const getPreTaxAmount = (item, reportKey) => {
+  if (reportKey === "sales") {
+    // מכירות: (מחיר - הנחה%) × כמות - הוצאות
+    const num = Number(item.number) || 0;
+    const disc = Number(item.discount) || 0;
+    const qty = Number(item.quantity) || 1;
+    const exp = Number(item.expenses) || 0;
+    const saleVal = num - (num * disc) / 100;
+    return saleVal * qty - exp;
+  }
+  // بقية التقارير: استخدم totalAmount كما هو (لا يوجد מע״מ منفصل)
+  return Number(item.totalAmount || item.number || 0);
+};
 
 const REPORTS = [
   {
@@ -83,6 +99,7 @@ export default function ChartsPage() {
     queryFn: () => settingsApi.get().then(r => r.data),
     staleTime: Infinity,  // لا تعيد التحميل
   });
+  
   const filtered = useMemo(() => {
     let result = [...(rawData || [])].filter(item => {
       if (!item.date) return false;
@@ -96,7 +113,8 @@ export default function ChartsPage() {
     return result.sort((a, b) => a.date < b.date ? -1 : 1);
   }, [rawData, filterYear, filterMonth, filterClient, search, report]);
 
-  const total = report.totalField ? filtered.reduce((s, i) => s + Number(i[report.totalField] || 0), 0) : null;
+  // ✅ استخدم getPreTaxAmount لحساب المجموع (قبل מע״מ للمكيعات)
+  const total = report.totalField ? filtered.reduce((s, i) => s + getPreTaxAmount(i, selectedReport), 0) : null;
   const allClients = [...new Set((rawData || []).map(i => i.clientName).filter(Boolean))].sort();
 
   const renderCell = (item, col) => {
@@ -156,7 +174,7 @@ export default function ChartsPage() {
       </div>
 
       {/* Filters */}
-      <div style={S.card} style={{ ...S.card, padding: "20px 24px" }}>
+      <div style={{ ...S.card, padding: "20px 24px" }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)", marginBottom: 14 }}>סינון הדוח</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px,1fr))", gap: 12 }}>
           <div>
@@ -188,8 +206,8 @@ export default function ChartsPage() {
             </div>
           )}
           <div>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--text-4)", marginBottom: 6, textTransform: "uppercase" }}>חיפוש חופשי</label>
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש..." style={S.input} onFocus={fo} onBlur={bl} />
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--text-4)", marginBottom: 6, textTransform: "uppercase" }}>חיפוש חופשي</label>
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חيفوש..." style={S.input} onFocus={fo} onBlur={bl} />
           </div>
         </div>
       </div>
