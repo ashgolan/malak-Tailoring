@@ -27,14 +27,17 @@ export default function ExpensesPage() {
   const [modal, setModal] = useState(false); const [form, setForm] = useState(EMPTY);
   const [search, setSearch] = useState(""); const [showAll, setShowAll] = useState(false);
   const [editId, setEditId] = useState(null); const [editVals, setEditVals] = useState({});
-  const maam = Number(taxValues?.maamValue || 17); const currentYear = new Date().getFullYear();
+  const maam = Number(taxValues?.maamValue || 18); const currentYear = new Date().getFullYear();
   const allNames = [...new Set((data || []).map(i => i.name).filter(Boolean))].sort();
   const filtered = [...(data || [])].filter(item => {
     if (!showAll) { if (!item.date) return item.colored; if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false; }
     if (search) { const s = search.toLowerCase(); return ["name", "taxNumber"].some(f => String(item[f] || "").toLowerCase().includes(s)); }
     return true;
   }).sort((a, b) => a.date < b.date ? 1 : -1);
-  const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
+
+  // ✅ المجموع قبل מע״מ = مجموع حقل "number" (السكوم قبل הוספת מע״מ)
+  const total = filtered.reduce((s, i) => s + (Number(i.number) || 0), 0);
+
   const val = (k) => editId ? (editVals[k] ?? "") : form[k];
   const set = (k, v) => editId ? setEditVals(p => ({ ...p, [k]: v })) : setForm(p => ({ ...p, [k]: v }));
   const handleSubmit = (e) => {
@@ -59,6 +62,16 @@ export default function ExpensesPage() {
           <button onClick={() => setModal(true)} style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ הוסף</button>
         </div>
       </div>
+
+      {/* Stats */}
+      {!isMobile && (
+        <div style={S.statBar}>
+          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>סה״כ (לפני מע״מ)</span><span style={{ fontSize: 18, fontWeight: 700, color: "#ef4444" }}>{fmt(total)} ₪</span></div>
+          <div style={S.divider} />
+          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>רשומות</span><span style={{ fontSize: 18, fontWeight: 700, color: "var(--text-3)" }}>{filtered.length}</span></div>
+        </div>
+      )}
+
       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם, חשבונית..." style={S.inputLg} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
       {isMobile ? (<MobileCards items={filtered} columns={mobileCols} onEdit={item => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }} onDelete={id => remove(id)} onToggleColor={toggleColor} total={total} theme={theme} />) : (
         <div style={S.card}>
@@ -105,11 +118,12 @@ export default function ExpensesPage() {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={S.label}>תאריך</label><input type="date" value={val("date")} onChange={e => set("date", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
-<div style={{ gridColumn: "1/-1" }}>
-  <label style={S.label}>שם / תיאור</label>
-  <AutocompleteInput value={val("name")} onChange={e => set("name", e.target.value)}
-    suggestions={allNames} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl}/>
-</div>            <div><label style={S.label}>סכום</label><input type="number" min="0" value={val("number")} onChange={e => set("number", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+            <div style={{ gridColumn: "1/-1" }}>
+              <label style={S.label}>שם / תיאור</label>
+              <AutocompleteInput value={val("name")} onChange={e => set("name", e.target.value)}
+                suggestions={allNames} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl}/>
+            </div>
+            <div><label style={S.label}>סכום</label><input type="number" min="0" value={val("number")} onChange={e => set("number", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
             <div><label style={S.label}>מס׳ חשבונית</label><input type="text" value={val("taxNumber")} onChange={e => set("taxNumber", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
             <div><label style={S.label}>ת.תשלום</label><input type="date" value={val("paymentDate")} onChange={e => set("paymentDate", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>

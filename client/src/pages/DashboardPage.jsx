@@ -94,7 +94,8 @@ export default function DashboardPage() {
 
   // ✅ totalSales = סכום כל המכירות לפני מע״מ
   const totalSales    = useMemo(()=>sales.reduce((s,i)=>s+preTaxSalesAmount(i),0),[sales]);
-  const totalExpenses = useMemo(()=>expenses.reduce((s,i)=>s+(i.totalAmount||0),0),[expenses]);
+  // ✅ totalExpenses = סכום לפני מע״מ (שדה number)
+  const totalExpenses = useMemo(()=>expenses.reduce((s,i)=>s+(Number(i.number)||0),0),[expenses]);
   const totalWorkers  = useMemo(()=>workers.reduce((s,i)=>s+(i.totalAmount||0),0),[workers]);
   const totalSleeves  = useMemo(()=>sleeves.reduce((s,i)=>s+(i.totalAmount||0),0),[sleeves]);
   const openChecks    = useMemo(()=>checks.filter(i=>i.colored).length,[checks]);
@@ -159,6 +160,7 @@ export default function DashboardPage() {
           <div>
             <p style={{color:"rgba(255,255,255,0.8)",fontSize:12,margin:"0 0 2px"}}>רווח משוער {currentYear}</p>
             <p style={{color:"#fff",fontSize:22,fontWeight:700,margin:0}}>{fmt(profit)} ₪</p>
+            <p style={{color:"rgba(255,255,255,0.65)",fontSize:11,margin:"4px 0 0"}}>* כל הסכומים לפני מע״מ</p>
           </div>
           <TrendingUp size={32} color="rgba(255,255,255,0.3)"/>
         </div>

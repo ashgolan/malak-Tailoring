@@ -25,7 +25,11 @@ const getPreTaxAmount = (item, reportKey) => {
     const saleVal = num - (num * disc) / 100;
     return saleVal * qty - exp;
   }
-  // بقية التقارير: استخدم totalAmount كما هو (لا يوجد מע״מ منفصل)
+  if (reportKey === "expenses") {
+    // הוצאות: number = הסכום לפני מע״מ
+    return Number(item.number) || 0;
+  }
+  // بقية التقارير: استخدم totalAmount كما هو
   return Number(item.totalAmount || item.number || 0);
 };
 
