@@ -41,6 +41,9 @@ export default function MobileCards({ items = [], columns = [], onEdit, onDelete
               const raw = item[col.key];
               const val = col.render ? col.render(raw, item)
                         : col.type === "money" ? (raw ? `${fmt(raw)} ₪` : "-")
+                        : col.type === "boolean" ? (raw
+                            ? <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ מע״מ</span>
+                            : <span style={{ color: "var(--text-4)" }}>ללא</span>)
                         : (raw ?? "-");
 
               return (
