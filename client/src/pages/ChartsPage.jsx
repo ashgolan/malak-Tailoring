@@ -29,6 +29,10 @@ const getPreTaxAmount = (item, reportKey) => {
     // הוצאות: number = הסכום לפני מע״מ
     return Number(item.number) || 0;
   }
+  if (reportKey === "sleevesBids") {
+    // שרוולים: מחיר × כמות - הוצאות
+    return Number(item.number || 0) * Number(item.quantity || 1) - Number(item.expenses || 0);
+  }
   // بقية التقارير: استخدم totalAmount كما هو
   return Number(item.totalAmount || item.number || 0);
 };
@@ -210,8 +214,8 @@ export default function ChartsPage() {
             </div>
           )}
           <div>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--text-4)", marginBottom: 6, textTransform: "uppercase" }}>חיפוש חופשي</label>
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חيفوש..." style={S.input} onFocus={fo} onBlur={bl} />
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--text-4)", marginBottom: 6, textTransform: "uppercase" }}>חיפוש חופשי</label>
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש..." style={S.input} onFocus={fo} onBlur={bl} />
           </div>
         </div>
       </div>

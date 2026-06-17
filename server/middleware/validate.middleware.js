@@ -37,13 +37,12 @@ export const schemas = {
   }),
 
   // ─ Sale ─────────────────────────────────────────────────────
-  // model: date, clientName, remark, name, quantity, number, discount, sale, expenses, totalAmount, tax, colored
   sale: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
     name: strReq().max(200),
     remark: strOpt().max(300),
-    quantity: Joi.number().integer().min(0).default(1),
+    quantity: Joi.number().min(0).default(1),
     number: numOpt().min(0).default(0),
     discount: numOpt().min(0).max(100).default(0),
     sale: numOpt().min(0).default(0),
@@ -54,7 +53,6 @@ export const schemas = {
   }),
 
   // ─ Bounced Check ────────────────────────────────────────────
-  // model: date, clientName, checkNumber, bankNumber, branchNumber, accountNumber, number, paymentDate, taxNumber, colored, remark, totalAmount
   bouncedCheck: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -71,7 +69,6 @@ export const schemas = {
   }),
 
   // ─ Worker Expense ───────────────────────────────────────────
-  // model: date, location, clientName, equipment, number, colored, totalAmount, tax
   workerExpense: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -84,7 +81,6 @@ export const schemas = {
   }),
 
   // ─ Waybill ──────────────────────────────────────────────────
-  // model: date, location, clientName, name, remark, colored, quantity, totalAmount
   waybill: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -97,7 +93,6 @@ export const schemas = {
   }),
 
   // ─ Partial Payment ──────────────────────────────────────────
-  // model: date, clientName, name, number, advanceAmount, colored, totalAmount, payments[]
   partialPayment: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -114,7 +109,8 @@ export const schemas = {
       })
     ).optional().default([]),
   }),
-  // ─ Partial Payment Update (add payment) ─────────────────────
+
+  // ─ Partial Payment Update ───────────────────────────────────
   partialPaymentUpdate: Joi.object({
     date: dateStr(),
     clientName: strOpt().max(120),
@@ -131,8 +127,8 @@ export const schemas = {
       })
     ).optional().default([]),
   }),
+
   // ─ Institution Tax ──────────────────────────────────────────
-  // model: date, clientName, name, taxNumber, number, paymentDate, colored, totalAmount
   institutionTax: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -145,7 +141,6 @@ export const schemas = {
   }),
 
   // ─ Sale To Company ──────────────────────────────────────────
-  // model: date, clientName, name, kindOfWork, containersNumbers, sending, number, afterTax, totalAmount, colored
   saleToCompany: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -160,7 +155,6 @@ export const schemas = {
   }),
 
   // ─ Expense ──────────────────────────────────────────────────
-  // model: date, name, number, paymentDate, colored, taxNumber, tax, totalAmount
   expense: Joi.object({
     date: dateStr(),
     name: strReq().max(200),
@@ -173,19 +167,19 @@ export const schemas = {
   }),
 
   // ─ Sleeves Bid ──────────────────────────────────────────────
-  // model: date, clientName, number, quantity, tax, totalAmount, colored
+  // ✅ quantity يسمح بأرقام عشرية + إضافة expenses
   sleevesBid: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
-    quantity: numReq().integer().min(1),
+    quantity: Joi.number().min(0).default(1),
     number: numOpt().min(0),
+    expenses: numOpt().min(0).default(0),
     totalAmount: numOpt().min(0),
     tax: bool(),
     colored: bool(),
   }),
 
   // ─ Bid ──────────────────────────────────────────────────────
-  // model: clientName, date, time, isApproved, target, totalAmount, freeBid, data[]
   bid: Joi.object({
     clientName: strReq().max(120),
     date: strOpt(),
@@ -198,7 +192,6 @@ export const schemas = {
   }),
 
   // ─ Inventory ────────────────────────────────────────────────
-  // model: name, number
   inventory: Joi.object({
     name: strReq().max(150),
     number: numReq().min(0),
@@ -241,9 +234,9 @@ export const schemas = {
 export const validate = (schema, target = "body") =>
   (req, res, next) => {
     const { error, value } = schema.validate(req[target], {
-      abortEarly: false,  // أرجع كل الأخطاء معاً
-      stripUnknown: true,   // احذف الحقول غير المعرّفة
-      convert: true,   // حوّل string → number تلقائياً
+      abortEarly: false,
+      stripUnknown: true,
+      convert: true,
     });
 
     if (error) {

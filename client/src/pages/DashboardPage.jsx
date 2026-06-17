@@ -97,7 +97,8 @@ export default function DashboardPage() {
   // ✅ totalExpenses = סכום לפני מע״מ (שדה number)
   const totalExpenses = useMemo(()=>expenses.reduce((s,i)=>s+(Number(i.number)||0),0),[expenses]);
   const totalWorkers  = useMemo(()=>workers.reduce((s,i)=>s+(i.totalAmount||0),0),[workers]);
-  const totalSleeves  = useMemo(()=>sleeves.reduce((s,i)=>s+(i.totalAmount||0),0),[sleeves]);
+  // ✅ totalSleeves = סכום לפני מע״מ (מחיר × כמות - הוצאות)
+  const totalSleeves  = useMemo(()=>sleeves.reduce((s,i)=>s+(Number(i.number||0)*Number(i.quantity||1)-Number(i.expenses||0)),0),[sleeves]);
   const openChecks    = useMemo(()=>checks.filter(i=>i.colored).length,[checks]);
   const openPartial   = useMemo(()=>partial.filter(i=>{
     const paid=(i.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0)+((i.payments||[]).length===0?Number(i.advanceAmount||0):0);

@@ -10,15 +10,17 @@ import MobileCards from "../components/tables/MobileCards";
 import Modal from "../components/ui/Modal";
 import AutocompleteInput from "../components/ui/AutocompleteInput.jsx";
 
-const EMPTY = { date: today(), clientName: "", number: 0, quantity: 1, tax: false, totalAmount: 0 };
+const EMPTY = { date: today(), clientName: "", number: 0, quantity: 1, expenses: 0, tax: false, totalAmount: 0 };
 const COLS = [
-  { key: "totalAmount", label: "סה״כ", type: "money", width: "12%" },
-  { key: "tax", label: "מע״מ", type: "boolean", width: "8%" },
+  { key: "totalAmount", label: "סה״כ", type: "money", width: "10%" },
+  { key: "tax", label: "מע״מ", type: "boolean", width: "7%" },
+  { key: "expenses", label: "הוצ׳", type: "money", width: "10%" },
   { key: "quantity", label: "כמות", type: "number", width: "10%" },
-  { key: "number", label: "מחיר", type: "money", width: "15%" },
-  { key: "clientName", label: "קליינט", width: "30%" },
-  { key: "date", label: "תאריך", width: "15%" },
+  { key: "number", label: "מחיר", type: "money", width: "12%" },
+  { key: "clientName", label: "קליינט", width: "28%" },
+  { key: "date", label: "תאריך", width: "13%" },
 ];
+
 export default function SleevesBidsPage() {
   const { theme } = useTheme(); const isMobile = useIsMobile(); const S = useStyles(theme);
   const { data, isLoading, create, update, remove, toggleColor } = useCrud("sleevesBids", sleevesBidsApi);
@@ -26,20 +28,43 @@ export default function SleevesBidsPage() {
   const [modal, setModal] = useState(false); const [form, setForm] = useState(EMPTY);
   const [search, setSearch] = useState(""); const [showAll, setShowAll] = useState(false);
   const [editId, setEditId] = useState(null); const [editVals, setEditVals] = useState({});
-  const maam = Number(taxValues?.maamValue || 17); const currentYear = new Date().getFullYear();
+  const maam = Number(taxValues?.maamValue || 18); const currentYear = new Date().getFullYear();
   const allClients = [...new Set((data || []).map(i => i.clientName).filter(Boolean))].sort();
+
   const filtered = [...(data || [])].filter(item => {
     if (!showAll) { if (!item.date) return item.colored; if (new Date(item.date).getFullYear() !== currentYear && !item.colored) return false; }
     if (search) { const s = search.toLowerCase(); return ["clientName"].some(f => String(item[f] || "").toLowerCase().includes(s)); }
     return true;
   }).sort((a, b) => a.date < b.date ? 1 : -1);
-  const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
+
+  // ✅ מחיר × כמות - הוצאות = base (לפני מע״מ)
+  const calcBase = (n, q, exp) => Number(n || 0) * Number(q || 1) - Number(exp || 0);
+  const calcTotal = (n, q, exp, tax) => {
+    const base = calcBase(n, q, exp);
+    return tax ? Math.round(base * (1 + maam / 100)) : base;
+  };
+
+  // ✅ المجموع في الشريط العلوي قبل מע״מ
+  const total = filtered.reduce((s, i) => s + calcBase(i.number, i.quantity, i.expenses), 0);
+
   const val = (k) => editId ? (editVals[k] ?? "") : form[k];
   const set = (k, v) => editId ? setEditVals(p => ({ ...p, [k]: v })) : setForm(p => ({ ...p, [k]: v }));
-  const calcTotal = (n, q, tax) => { const base = Number(n || 0) * Number(q || 1); return tax ? Math.round(base * (1 + maam / 100)) : base; };
-  const handleSubmit = (e) => { e.preventDefault(); if (editId) { update(editId, { ...editVals, totalAmount: calcTotal(editVals.number, editVals.quantity, editVals.tax) }); setEditId(null); } else create({ ...form, totalAmount: calcTotal(form.number, form.quantity, form.tax) }); setModal(false); setForm(EMPTY); };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editId) {
+      update(editId, { ...editVals, totalAmount: calcTotal(editVals.number, editVals.quantity, editVals.expenses, editVals.tax) });
+      setEditId(null);
+    } else {
+      create({ ...form, totalAmount: calcTotal(form.number, form.quantity, form.expenses, form.tax) });
+    }
+    setModal(false); setForm(EMPTY);
+  };
+
   const mobileCols = COLS.map(col => col.key === "tax" ? { ...col, render: v => v ? <span style={{ color: "#16a34a", fontWeight: 600 }}>✓ מע״מ</span> : <span style={{ color: "var(--text-4)" }}>ללא</span> } : col);
+
   if (isLoading) return <div style={{ display: "flex", justifyContent: "center", padding: 80 }}><div className="rosh-spinner" style={{ borderTopColor: theme.primary }} /></div>;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, direction: "rtl" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
@@ -53,15 +78,20 @@ export default function SleevesBidsPage() {
           <button onClick={() => setModal(true)} style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ הוסף</button>
         </div>
       </div>
+
       {/* Stats */}
       {!isMobile && (
         <div style={S.statBar}>
-          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>סה״כ</span><span style={{ fontSize: 18, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span></div>
+          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>סה״כ (לאחר הוצאות)</span><span style={{ fontSize: 18, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span></div>
+          <div style={S.divider} />
+          <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>הוצאות</span><span style={{ fontSize: 18, fontWeight: 700, color: "#ef4444" }}>{fmt(filtered.reduce((s, i) => s + (Number(i.expenses) || 0), 0))} ₪</span></div>
           <div style={S.divider} />
           <div><span style={{ fontSize: 11, color: "var(--text-4)", display: "block", marginBottom: 3 }}>רשומות</span><span style={{ fontSize: 18, fontWeight: 700, color: "var(--text-3)" }}>{filtered.length}</span></div>
         </div>
       )}
+
       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי קליינט..." style={S.inputLg} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+
       {isMobile ? (<MobileCards items={filtered} columns={mobileCols} onEdit={item => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }} onDelete={id => remove(id)} onToggleColor={toggleColor} total={total} theme={theme} />) : (
         <div style={S.card}>
           <div style={{ display: "flex", flexDirection: "row-reverse", alignItems: "center", width: "100%", background: theme.gradient, color: "#fff" }}>
@@ -76,13 +106,30 @@ export default function SleevesBidsPage() {
                   onMouseEnter={e => { if (!item.colored) e.currentTarget.style.background = "var(--bg-hover)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = item.colored ? "var(--colored-bg)" : idx % 2 === 0 ? "var(--bg-card)" : "var(--bg-card-alt)"; }}>
                   <div style={{ width: 70, minWidth: 70, padding: "10px 8px", display: "flex", gap: 4, justifyContent: "center", flexShrink: 0 }}>
-                    {isEditing ? (<><button onClick={() => { update(editId, { ...editVals, totalAmount: calcTotal(editVals.number, editVals.quantity, editVals.tax) }); setEditId(null); }} style={S.btnSave}>✓</button><button onClick={() => setEditId(null)} style={S.btnDiscard}>✕</button></>)
+                    {isEditing
+                      ? (<><button onClick={() => { update(editId, { ...editVals, totalAmount: calcTotal(editVals.number, editVals.quantity, editVals.expenses, editVals.tax) }); setEditId(null); }} style={S.btnSave}>✓</button><button onClick={() => setEditId(null)} style={S.btnDiscard}>✕</button></>)
                       : (<><button onClick={() => { setEditId(item._id); setEditVals({ ...item }); }} style={S.btnEdit}>✎</button><button onClick={() => { if (window.confirm("האם אתה בטוח שברצונך למחוק?")) remove(item._id); }} style={S.btnDelete}>🗑</button></>)}
                   </div>
                   {COLS.map(col => (
                     <div key={col.key} style={S.cell(col.width, { color: item.colored ? "var(--colored-text)" : col.type === "money" ? theme.primary : "var(--text-1)", fontWeight: col.type === "money" ? 600 : 400 })}>
-                      {isEditing ? (col.type === "boolean" ? <input type="checkbox" checked={!!editVals[col.key]} onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.checked }))} /> : <input type={col.type === "money" || col.type === "number" ? "number" : "text"} value={editVals[col.key] ?? ""} onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))} style={{ width: "100%", border: `1px solid ${theme.accent}`, borderRadius: 6, padding: "2px 6px", fontSize: 12, outline: "none", fontFamily: "inherit", background: "var(--bg-input)", color: "var(--text-1)" }} />)
-                        : (col.type === "boolean" ? (item[col.key] ? <span style={{ color: "#16a34a", fontWeight: 600 }}>✓</span> : <span style={{ color: "var(--text-4)" }}>-</span>) : col.type === "money" || col.type === "number" ? fmt(item[col.key]) : (item[col.key] || "-"))}
+                      {isEditing ? (
+                        col.type === "boolean"
+                          ? <div onClick={() => setEditVals(v => ({ ...v, [col.key]: !v[col.key] }))} style={{ position: "relative", width: 36, height: 20, cursor: "pointer" }}>
+                              <div style={{ position: "absolute", inset: 0, borderRadius: 20, background: editVals[col.key] ? theme.primary : "var(--border)", transition: "0.2s" }}>
+                                <div style={{ position: "absolute", top: 2, right: editVals[col.key] ? 2 : 18, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "0.2s" }} />
+                              </div>
+                            </div>
+                          : col.key === "totalAmount"
+                            ? <span>{fmt(calcTotal(editVals.number, editVals.quantity, editVals.expenses, editVals.tax))}</span>
+                            : <input type={col.type === "money" || col.type === "number" ? "number" : "text"}
+                                step={col.type === "money" || col.type === "number" ? "any" : undefined}
+                                value={editVals[col.key] ?? ""} onChange={e => setEditVals(v => ({ ...v, [col.key]: e.target.value }))}
+                                style={{ width: "100%", border: `1px solid ${theme.accent}`, borderRadius: 6, padding: "2px 6px", fontSize: 12, outline: "none", fontFamily: "inherit", background: "var(--bg-input)", color: "var(--text-1)" }} />
+                      ) : (
+                        col.type === "boolean"
+                          ? (item[col.key] ? <span style={{ color: "#16a34a", fontWeight: 600, fontSize: 11 }}>✓ מע״מ</span> : <span style={{ color: "var(--text-4)", fontSize: 11 }}>ללא</span>)
+                          : col.type === "money" || col.type === "number" ? fmt(item[col.key]) : (item[col.key] || "-")
+                      )}
                     </div>
                   ))}
                   <div style={{ width: 30, minWidth: 30, display: "flex", justifyContent: "center", flexShrink: 0 }}><div onClick={() => toggleColor(item._id, { colored: !item.colored })} style={S.dot(item.colored)} /></div>
@@ -92,23 +139,18 @@ export default function SleevesBidsPage() {
           {filtered.length > 0 && (<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "var(--bg-hover)", borderTop: `2px solid ${theme.primaryBorder}` }}><span style={{ fontSize: 13, color: "var(--text-3)" }}>סה״כ ({filtered.length})</span><span style={{ fontSize: 16, fontWeight: 700, color: theme.primary }}>{fmt(total)} ₪</span></div>)}
         </div>
       )}
+
       <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת רשומה" : "הוספת שרוול"} size="md">
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div><label style={S.label}>תאריך</label><input type="date" value={val("date")} onChange={e => set("date", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
             <div>
               <label style={S.label}>קליינט</label>
-              <AutocompleteInput
-                value={val("clientName")}
-                onChange={e => set("clientName", e.target.value)}
-                suggestions={allClients}
-                required
-                style={S.input}
-                onFocus={e => fo(e, theme.accent)}
-                onBlur={bl}
-              />
-            </div>            <div><label style={S.label}>מחיר ליחידה</label><input type="number" min="0" value={val("number")} onChange={e => set("number", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
-            <div><label style={S.label}>כמות</label><input type="number" min="1" value={val("quantity")} onChange={e => set("quantity", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+              <AutocompleteInput value={val("clientName")} onChange={e => set("clientName", e.target.value)} suggestions={allClients} required style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
+            </div>
+            <div><label style={S.label}>מחיר ליחידה</label><input type="number" min="0" step="any" value={val("number")} onChange={e => set("number", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+            <div><label style={S.label}>כמות</label><input type="number" min="0" step="any" value={val("quantity")} onChange={e => set("quantity", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
+            <div style={{ gridColumn: "1/-1" }}><label style={S.label}>הוצאות (יורדות)</label><input type="number" min="0" step="any" value={val("expenses")} onChange={e => set("expenses", e.target.value)} style={S.input} onFocus={e => fo(e, theme.accent)} onBlur={bl} /></div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>
               <div style={{ position: "relative", width: 36, height: 20 }}>
                 <div onClick={() => set("tax", !val("tax"))} style={{ position: "absolute", inset: 0, borderRadius: 20, cursor: "pointer", transition: "0.2s", background: val("tax") ? theme.primary : "var(--border)" }}>
@@ -119,7 +161,7 @@ export default function SleevesBidsPage() {
             </div>
             <div style={{ background: "var(--bg-hover)", borderRadius: 10, padding: "12px 14px", border: `1px solid ${theme.primaryBorder}` }}>
               <div style={{ fontSize: 11, color: "var(--text-4)", marginBottom: 4 }}>סה״כ מחושב</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: theme.primary }}>{fmt(calcTotal(val("number"), val("quantity"), val("tax")))} ₪</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: theme.primary }}>{fmt(calcTotal(val("number"), val("quantity"), val("expenses"), val("tax")))} ₪</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 10 }}><button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={S.btnCancel}>ביטול</button><button type="submit" style={S.btnSubmit(theme)}>שמור</button></div>
