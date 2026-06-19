@@ -47,11 +47,12 @@ export const getMySettings = async (req, res) => {
       settings = await Setting.create({
         createdBy: req.user._id,
         storeName: "מתפרת מלאק",
-        maamValue: "17",
+        maamValue: "18",
         masValue: "2.5",
       });
     }
-    if (!settings.maamValue) settings.maamValue = "17";
+    // ✅ תיקון: fallback רק אם הערך חסר לחלוטין — לא מחליף ערך קיים
+    if (!settings.maamValue) settings.maamValue = "18";
     if (!settings.masValue) settings.masValue = "2.5";
     return res.status(200).json(settings);
   } catch (e) {
@@ -78,7 +79,8 @@ export const updateMySettings = async (req, res) => {
     if (footerText !== undefined) settings.footerText = footerText?.trim() || "";
     if (logoBase64 !== undefined) settings.logoBase64 = logoBase64;
     if (logoUrl !== undefined) settings.logoUrl = logoUrl;
-    if (bidFooter !== undefined) settings.bidFooter = bidFooter?.trim() || "";
+    // ✅ תיקון: bidFooter מתעדכן רק אם נשלח כ-string (גם ריק) — לא נמחק בגלל שליחה חלקית
+    if (typeof bidFooter === "string") settings.bidFooter = bidFooter.trim();
     if (maamValue !== undefined) settings.maamValue = maamValue;
     if (masValue !== undefined) settings.masValue = masValue;
     if (transportOptions !== undefined) settings.transportOptions = transportOptions;

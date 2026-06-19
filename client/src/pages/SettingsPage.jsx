@@ -136,34 +136,33 @@ function UsersList({ theme }) {
         const isMe = u.email === currentUser?.email;
         const isEditing = editForm?._id === u._id;
         return (
-          <div key={u._id} style={{ background: "var(--bg-card-alt)", borderRadius: 10, border: "1px solid var(--border)", overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px" }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>{u.email}</div>
-                <div style={{ fontSize: 11, color: "var(--text-4)", marginTop: 2 }}>{u.role}</div>
-              </div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
-                {isMe && <span style={{ fontSize: 11, background: theme.primaryLight, color: theme.primary, padding: "3px 10px", borderRadius: 20, fontWeight: 600 }}>אתה</span>}
-                {isOwner && <span style={{ fontSize: 11, background: "#fef3c7", color: "#92400e", padding: "3px 10px", borderRadius: 20, fontWeight: 600 }}>מייסד</span>}
+          <div key={u._id} style={{ padding: "12px 14px", background: "var(--bg-card-alt)", borderRadius: 10, border: "1px solid var(--border)" }}>
+            {!isEditing ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>{u.email}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-4)", marginTop: 2 }}>
+                    {u.role} {isOwner ? "👑" : ""} {isMe ? "(אתה)" : ""}
+                  </div>
+                </div>
                 {!isOwner && (
-                  <button onClick={() => setEditForm(isEditing ? null : { _id: u._id, email: u.email, password: "" })}
-                    style={{ padding: "5px 12px", border: `1px solid ${theme.primaryBorder}`, borderRadius: 7, background: isEditing ? theme.primaryLight : "var(--bg-card)", color: theme.primary, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                    {isEditing ? "סגור" : "✎ עריכה"}
-                  </button>
-                )}
-                {!isOwner && !isMe && (
-                  <button onClick={() => handleDelete(u)}
-                    style={{ padding: "5px 12px", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 7, background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                    🗑 מחק
-                  </button>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button onClick={() => setEditForm({ _id: u._id, email: u.email, role: u.role, newPassword: "" })}
+                      style={{ padding: "5px 10px", background: "var(--bg-hover)", border: "1px solid var(--border)", borderRadius: 7, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "var(--text-2)" }}>
+                      ✏️ ערוך
+                    </button>
+                    <button onClick={() => handleDelete(u)}
+                      style={{ padding: "5px 10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 7, fontSize: 12, cursor: "pointer", fontFamily: "inherit", color: "#ef4444" }}>
+                      🗑
+                    </button>
+                  </div>
                 )}
               </div>
-            </div>
-            {isEditing && (
-              <form onSubmit={handleEdit} style={{ padding: "14px 16px", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 10, background: "var(--bg-hover)" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-3)" }}>עריכת משתמש</div>
-                <input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} placeholder="אימייל" style={rowInput} />
-                <input type="password" value={editForm.password} onChange={e => setEditForm(p => ({ ...p, password: e.target.value }))} placeholder="סיסמה חדשה (מינ 10 תווים)" style={rowInput} />
+            ) : (
+              <form onSubmit={handleEdit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-3)", marginBottom: 2 }}>עריכת משתמש</div>
+                <input type="email" value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} required style={rowInput} />
+                <input type="password" placeholder="סיסמה חדשה (השאר ריק לשמור)" value={editForm.newPassword} onChange={e => setEditForm(p => ({ ...p, newPassword: e.target.value }))} style={rowInput} autoComplete="new-password" />
                 <div style={{ display: "flex", gap: 8 }}>
                   <button type="submit" disabled={saving} style={{ flex: 2, padding: "9px", background: theme.gradient, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                     {saving ? "שומר..." : "שמור שינויים"}
@@ -223,7 +222,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState({
     storeName: "", storePhone: "", storeAddress: "",
     footerText: "", bidFooter: "",
-    maamValue: "17", masValue: "2.5"
+    maamValue: "18", masValue: "2.5"   // ✅ תיקון: 18 במקום 17
   });
   const [secForm, setSecForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const { user: currentUser } = useAuthStore();
@@ -241,7 +240,7 @@ export default function SettingsPage() {
         storeAddress: settings.storeAddress || "",
         footerText: settings.footerText || "",
         bidFooter: settings.bidFooter || "",
-        maamValue: String(settings.maamValue || 17),
+        maamValue: String(settings.maamValue || 18),   // ✅ תיקון: 18 במקום 17
         masValue: String(settings.masValue || 2.5),
       });
       setLogoPreview(settings.logoBase64 || "");
@@ -332,7 +331,7 @@ export default function SettingsPage() {
                   <button key={String(opt.v)} onClick={() => { if (isDark !== opt.v) toggleDark(); }}
                     style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 12px", borderRadius: 12, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", border: `2px solid ${isDark === opt.v ? theme.primary : "var(--border)"}`, background: isDark === opt.v ? theme.primaryLight : "var(--bg-card-alt)" }}>
                     {opt.icon}
-                    <span style={{ fontSize: 13, fontWeight: isDark === opt.v ? 700 : 400, color: isDark === opt.v ? theme.primary : "var(--text-2)" }}>{opt.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: isDark === opt.v ? 700 : 500, color: isDark === opt.v ? theme.primary : "var(--text-2)" }}>{opt.label}</span>
                     {isDark === opt.v && <span style={{ fontSize: 10, color: theme.primary }}>✓ פעיל</span>}
                   </button>
                 ))}

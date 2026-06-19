@@ -9,7 +9,7 @@ const settingSchema = new Schema({
   logoBase64: { type: String, default: "" },
   logoUrl: { type: String, default: "" },
   bidFooter: { type: String, default: "" },
-  maamValue: { type: String, default: "17" },
+  maamValue: { type: String, default: "18" },
   masValue: { type: String, default: "2.5" },
   transportOptions: { type: [String], default: ["טורקית", "הודית", "סינית", "אירופאית", "מקומית"] },
   sendingOptions: { type: [String], default: ["צפון", "מרכז", "דרום", "ירושלים", "שפלה"] },
