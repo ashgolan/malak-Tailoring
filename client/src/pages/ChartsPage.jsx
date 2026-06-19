@@ -17,71 +17,145 @@ const YEARS = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3];
 // ✅ حساب المبلغ قبل מע״מ حسب نوع التقرير
 const getPreTaxAmount = (item, reportKey) => {
   if (reportKey === "sales") {
-    // מכירות: (מחיר - הנחה%) × כמות - הוצאות
-    const num = Number(item.number) || 0;
+    const num  = Number(item.number)   || 0;
     const disc = Number(item.discount) || 0;
-    const qty = Number(item.quantity) || 1;
-    const exp = Number(item.expenses) || 0;
+    const qty  = Number(item.quantity) || 1;
+    const exp  = Number(item.expenses) || 0;
     const saleVal = num - (num * disc) / 100;
     return saleVal * qty - exp;
   }
   if (reportKey === "expenses") {
-    // הוצאות: number = הסכום לפני מע״מ
     return Number(item.number) || 0;
   }
   if (reportKey === "sleevesBids") {
-    // שרוולים: מחיר × כמות - הוצאות
     return Number(item.number || 0) * Number(item.quantity || 1) - Number(item.expenses || 0);
   }
-  // بقية التقارير: استخدم totalAmount كما هو
+  if (reportKey === "salesToCompanies") {
+    // ✅ תמיד מחזיר number (לפני מע״מ)
+    return Number(item.number) || 0;
+  }
   return Number(item.totalAmount || item.number || 0);
 };
 
 const REPORTS = [
   {
     key: "sales", label: "מכירות", icon: "🛒", api: salesApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "קליינט" }, { key: "name", label: "עבודה" }, { key: "quantity", label: 'כ.מ"ר', type: "num" }, { key: "number", label: "מחיר", type: "money" }, { key: "discount", label: "הנחה%", type: "num" }, { key: "expenses", label: "הוצאות", type: "money" }, { key: "tax", label: "מע״מ", type: "bool" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
-    searchFields: ["clientName", "name"], totalField: "totalAmount"
+    cols: [
+      { key: "date",        label: "תאריך" },
+      { key: "clientName",  label: "קליינט" },
+      { key: "name",        label: "עבודה" },
+      { key: "quantity",    label: 'כ.מ"ר',    type: "num" },
+      { key: "number",      label: "מחיר",      type: "money" },
+      { key: "discount",    label: "הנחה%",     type: "num" },
+      { key: "expenses",    label: "הוצאות",    type: "money" },
+      { key: "tax",         label: "מע״מ",      type: "bool" },
+      { key: "totalAmount", label: "סה״כ",      type: "money" },
+    ],
+    searchFields: ["clientName", "name"], totalField: "totalAmount",
   },
   {
     key: "bouncedChecks", label: "שיקים דחויים", icon: "✅", api: bouncedChecksApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "קליינט" }, { key: "taxNumber", label: "מס' חשבונית" }, { key: "checkNumber", label: "מס' שיק" }, { key: "bankNumber", label: "בנק" }, { key: "branchNumber", label: "סניף" }, { key: "accountNumber", label: "חשבון" }, { key: "paymentDate", label: "ת.פירעון" }, { key: "number", label: "סכום", type: "money" }, { key: "remark", label: "הערה" }],
-    searchFields: ["clientName", "checkNumber"], totalField: "number"
+    cols: [
+      { key: "date",          label: "תאריך" },
+      { key: "clientName",    label: "קליינט" },
+      { key: "taxNumber",     label: "מס' חשבונית" },
+      { key: "checkNumber",   label: "מס' שיק" },
+      { key: "bankNumber",    label: "בנק" },
+      { key: "branchNumber",  label: "סניף" },
+      { key: "accountNumber", label: "חשבון" },
+      { key: "paymentDate",   label: "ת.פירעון" },
+      { key: "number",        label: "סכום",  type: "money" },
+      { key: "remark",        label: "הערה" },
+    ],
+    searchFields: ["clientName", "checkNumber"], totalField: "number",
   },
   {
     key: "workersExpenses", label: "הוצאות עובדים", icon: "👷", api: workersExpensesApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "קליינט" }, { key: "location", label: "מיקום" }, { key: "equipment", label: "עבודה" }, { key: "number", label: "סכום", type: "money" }, { key: "tax", label: "שולם", type: "bool" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
-    searchFields: ["clientName", "location"], totalField: "totalAmount"
+    cols: [
+      { key: "date",        label: "תאריך" },
+      { key: "clientName",  label: "קליינט" },
+      { key: "location",    label: "מיקום" },
+      { key: "equipment",   label: "עבודה" },
+      { key: "number",      label: "סכום",   type: "money" },
+      { key: "tax",         label: "שולם",   type: "bool" },
+      { key: "totalAmount", label: "סה״כ",   type: "money" },
+    ],
+    searchFields: ["clientName", "location"], totalField: "totalAmount",
   },
   {
     key: "waybills", label: "תעודות משלוח", icon: "🚛", api: waybillsApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "חברה / מוסד" }, { key: "location", label: "כתובת" }, { key: "name", label: "מוצר" }, { key: "remark", label: "מס' הזמנה" }, { key: "quantity", label: "כמות", type: "num" }],
-    searchFields: ["clientName", "location", "name"], totalField: null
+    cols: [
+      { key: "date",       label: "תאריך" },
+      { key: "clientName", label: "חברה / מוסד" },
+      { key: "location",   label: "כתובת" },
+      { key: "name",       label: "מוצר" },
+      { key: "remark",     label: "מס' הזמנה" },
+      { key: "quantity",   label: "כמות",  type: "num" },
+    ],
+    searchFields: ["clientName", "location", "name"], totalField: null,
   },
   {
     key: "partialPayment", label: "תשלום חלקי", icon: "💳", api: partialPaymentApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "קליינט" }, { key: "name", label: "עבור" }, { key: "advanceAmount", label: "שולם", type: "money" }, { key: "totalAmount", label: "סכום כללי", type: "money" }],
-    searchFields: ["clientName", "name"], totalField: "totalAmount"
+    cols: [
+      { key: "date",          label: "תאריך" },
+      { key: "clientName",    label: "קליינט" },
+      { key: "name",          label: "עבור" },
+      { key: "advanceAmount", label: "שולם",        type: "money" },
+      { key: "totalAmount",   label: "סכום כללי",   type: "money" },
+    ],
+    searchFields: ["clientName", "name"], totalField: "totalAmount",
   },
   {
     key: "institutionTax", label: "חשבוניות למוסדות", icon: "🏛️", api: institutionTaxApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "מוסד" }, { key: "name", label: "עבודה" }, { key: "taxNumber", label: "מס' חשבונית" }, { key: "number", label: "סכום", type: "money" }, { key: "paymentDate", label: "ת.תשלום" }],
-    searchFields: ["clientName", "name", "taxNumber"], totalField: "number"
+    cols: [
+      { key: "date",        label: "תאריך" },
+      { key: "clientName",  label: "מוסד" },
+      { key: "name",        label: "עבודה" },
+      { key: "taxNumber",   label: "מס' חשבונית" },
+      { key: "number",      label: "סכום",      type: "money" },
+      { key: "paymentDate", label: "ת.תשלום" },
+    ],
+    searchFields: ["clientName", "name", "taxNumber"], totalField: "number",
   },
   {
+    // ✅ עמודות מעודכנות — כולל number (לפני מע״מ) ו-afterTax
     key: "salesToCompanies", label: "מכירות לחברות", icon: "🏢", api: salesToCompaniesApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "חברה" }, { key: "name", label: "עבודה" }, { key: "kindOfWork", label: "מכולה" }, { key: "sending", label: "משלוח" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
-    searchFields: ["clientName", "name"], totalField: "totalAmount"
+    cols: [
+      { key: "date",               label: "תאריך" },
+      { key: "clientName",         label: "חברה" },
+      { key: "name",               label: "עבודה" },
+      { key: "kindOfWork",         label: "סוג מכולה" },
+      { key: "containersNumbers",  label: "מס מכולה" },
+      { key: "sending",            label: "משלוח" },
+      { key: "number",             label: "לפני מע״מ",  type: "money" },
+      { key: "afterTax",           label: "מע״מ",        type: "boolCheck" },
+      { key: "totalAmount",        label: "סה״כ",        type: "money" },
+    ],
+    searchFields: ["clientName", "name"], totalField: "number", // ✅ totalField = number (לפני מע״מ)
   },
   {
     key: "expenses", label: "הוצאות", icon: "💸", api: expensesApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "name", label: "שם" }, { key: "taxNumber", label: "מס' חשבונית" }, { key: "number", label: "סכום", type: "money" }, { key: "paymentDate", label: "ת.תשלום" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
-    searchFields: ["name", "taxNumber"], totalField: "totalAmount"
+    cols: [
+      { key: "date",        label: "תאריך" },
+      { key: "name",        label: "שם" },
+      { key: "taxNumber",   label: "מס' חשבונית" },
+      { key: "number",      label: "סכום",      type: "money" },
+      { key: "paymentDate", label: "ת.תשלום" },
+      { key: "totalAmount", label: "סה״כ",      type: "money" },
+    ],
+    searchFields: ["name", "taxNumber"], totalField: "totalAmount",
   },
   {
     key: "sleevesBids", label: "הצעות שרוולים", icon: "✂️", api: sleevesBidsApi,
-    cols: [{ key: "date", label: "תאריך" }, { key: "clientName", label: "קליינט" }, { key: "quantity", label: "כמות", type: "num" }, { key: "number", label: "מחיר", type: "money" }, { key: "tax", label: "מע״מ", type: "bool" }, { key: "totalAmount", label: "סה״כ", type: "money" }],
-    searchFields: ["clientName"], totalField: "totalAmount"
+    cols: [
+      { key: "date",        label: "תאריך" },
+      { key: "clientName",  label: "קליינט" },
+      { key: "quantity",    label: "כמות",   type: "num" },
+      { key: "number",      label: "מחיר",   type: "money" },
+      { key: "tax",         label: "מע״מ",   type: "bool" },
+      { key: "totalAmount", label: "סה״כ",   type: "money" },
+    ],
+    searchFields: ["clientName"], totalField: "totalAmount",
   },
 ];
 
@@ -105,9 +179,9 @@ export default function ChartsPage() {
   const { data: settings } = useQuery({
     queryKey: ["settings"],
     queryFn: () => settingsApi.get().then(r => r.data),
-    staleTime: Infinity,  // لا تعيد التحميل
+    staleTime: Infinity,
   });
-  
+
   const filtered = useMemo(() => {
     let result = [...(rawData || [])].filter(item => {
       if (!item.date) return false;
@@ -121,15 +195,24 @@ export default function ChartsPage() {
     return result.sort((a, b) => a.date < b.date ? -1 : 1);
   }, [rawData, filterYear, filterMonth, filterClient, search, report]);
 
-  // ✅ استخدم getPreTaxAmount لحساب المجموع (قبل מע״מ للمكيعات)
-  const total = report.totalField ? filtered.reduce((s, i) => s + getPreTaxAmount(i, selectedReport), 0) : null;
+  // ✅ المجموع دائماً قبل מע״מ باستخدام getPreTaxAmount
+  const total = report.totalField
+    ? filtered.reduce((s, i) => s + getPreTaxAmount(i, selectedReport), 0)
+    : null;
+
+  // ✅ للمكيعات لشركات: مجموع سה״כ (כולל מע״מ) أيضاً
+  const totalWithTax = selectedReport === "salesToCompanies"
+    ? filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0)
+    : null;
+
   const allClients = [...new Set((rawData || []).map(i => i.clientName).filter(Boolean))].sort();
 
   const renderCell = (item, col) => {
     const val = item[col.key];
-    if (col.type === "money") return val ? `${fmt(val)} ₪` : "-";
-    if (col.type === "num") return val || "-";
-    if (col.type === "bool") return val ? "✓" : "✕";
+    if (col.type === "money")     return val ? `${fmt(val)} ₪` : "-";
+    if (col.type === "num")       return val || "-";
+    if (col.type === "bool")      return val ? "✓" : "✕";
+    if (col.type === "boolCheck") return val ? "✓ מע״מ" : "ללא";  // ✅ afterTax boolean
     return val || "-";
   };
 
@@ -137,7 +220,7 @@ export default function ChartsPage() {
   const bl = (e) => { e.target.style.borderColor = "var(--border)"; };
 
   const handlePrint = () => {
-    const logoHtml = getLogoHtml(settings);
+    const logoHtml   = getLogoHtml(settings);
     const footerHtml = getFooterHtml(settings);
 
     const html = `<html dir="rtl">
@@ -155,7 +238,8 @@ export default function ChartsPage() {
       ${filterMonth > 0 ? ` | חודש: ${MONTHS_HE[filterMonth - 1]}` : ""}
       ${filterClient ? ` | לקוח: ${filterClient}` : ""}
        | ${filtered.length} רשומות
-      ${total !== null ? ` | סה״כ: ${fmt(total)} ₪` : ""}
+      ${total !== null ? ` | סה״כ לפני מע״מ: ${fmt(total)} ₪` : ""}
+      ${totalWithTax !== null ? ` | סה״כ כולל מע״מ: ${fmt(totalWithTax)} ₪` : ""}
     </div>
     ${printRef.current.innerHTML}
     ${footerHtml}
@@ -171,7 +255,8 @@ export default function ChartsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: theme.gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📊</div>
-          <div><h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", margin: 0 }}>דוחות</h1>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-1)", margin: 0 }}>דוחות</h1>
             <p style={{ fontSize: 13, color: "var(--text-4)", margin: "3px 0 0" }}>הפקת דוחות מפורטים לפי סינון</p>
           </div>
         </div>
@@ -223,10 +308,16 @@ export default function ChartsPage() {
       {/* Stats summary */}
       <div style={{ background: "var(--bg-stat)", borderRadius: 12, border: `1px solid ${theme.primaryBorder}`, padding: "14px 24px", display: "flex", gap: 0, alignItems: "center", flexWrap: "wrap" }}>
         {[
-          { label: "דוח", value: `${report.icon} ${report.label}`, color: "var(--text-1)" },
-          { label: "תקופה", value: `${MONTHS_HE[Number(filterMonth) - 1] || "כל השנה"} ${filterYear}`, color: "var(--text-3)" },
-          { label: "רשומות", value: filtered.length, color: theme.primary },
-          ...(total !== null ? [{ label: "סה״כ", value: `${fmt(total)} ₪`, color: theme.primary }] : []),
+          { label: "דוח",    value: `${report.icon} ${report.label}`,                                  color: "var(--text-1)" },
+          { label: "תקופה",  value: `${MONTHS_HE[Number(filterMonth) - 1] || "כל השנה"} ${filterYear}`, color: "var(--text-3)" },
+          { label: "רשומות", value: filtered.length,                                                    color: theme.primary },
+          // ✅ למכירות לחברות — מראה גם לפני מע״מ וגם כולל מע״מ
+          ...(total !== null && totalWithTax !== null ? [
+            { label: "סה״כ לפני מע״מ", value: `${fmt(total)} ₪`,        color: theme.primary },
+            { label: "סה״כ כולל מע״מ", value: `${fmt(totalWithTax)} ₪`, color: "#d97706"     },
+          ] : total !== null ? [
+            { label: "סה״כ לפני מע״מ", value: `${fmt(total)} ₪`, color: theme.primary },
+          ] : []),
         ].map((stat, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
             {i > 0 && <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch", marginLeft: 24, marginRight: 24 }} />}
@@ -272,9 +363,17 @@ export default function ChartsPage() {
             {filtered.length > 0 && total !== null && (
               <tfoot>
                 <tr style={{ background: "var(--bg-hover)", borderTop: `2px solid ${theme.primaryBorder}`, fontWeight: 700 }}>
-                  <td style={{ padding: "12px 12px", fontSize: 13, color: "var(--text-3)" }}>סה״כ ({filtered.length} רשומות)</td>
+                  <td style={{ padding: "12px 12px", fontSize: 13, color: "var(--text-3)" }}>
+                    סה״כ ({filtered.length} רשומות)
+                  </td>
                   {report.cols.slice(1, -1).map(col => <td key={col.key} />)}
-                  <td style={{ padding: "12px 12px", textAlign: "right", fontSize: 15, color: theme.primary }}>{fmt(total)} ₪</td>
+                  <td style={{ padding: "12px 12px", textAlign: "right", fontSize: 15, color: theme.primary }}>
+                    {/* ✅ למכירות לחברות — עמודת סה״כ האחרונה = totalAmount (כולל מע״מ) */}
+                    {selectedReport === "salesToCompanies"
+                      ? `${fmt(totalWithTax)} ₪`
+                      : `${fmt(total)} ₪`
+                    }
+                  </td>
                 </tr>
               </tfoot>
             )}

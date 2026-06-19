@@ -1,10 +1,9 @@
 /**
- * validate.middleware.js — مصحّح ليتطابق مع الـ models الفعلية
+ * validate.middleware.js
  */
 
 import Joi from "joi";
 
-// ─── Helpers ───────────────────────────────────────────────────
 const strOpt = () => Joi.string().trim().optional().allow("", null);
 const strReq = () => Joi.string().trim().required();
 const numOpt = () => Joi.number().optional().allow(null);
@@ -14,13 +13,11 @@ const bool = () => Joi.boolean().optional().default(false);
 
 export const schemas = {
 
-  // ─ Login ────────────────────────────────────────────────────
   login: Joi.object({
     email: Joi.string().email().required().messages({ "string.email": "אימייל לא תקין" }),
     password: Joi.string().min(10).required().messages({ "string.min": "סיסמה קצרה מדי" }),
   }),
 
-  // ─ Register / Update user ───────────────────────────────────
   createUser: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(10).required(),
@@ -36,7 +33,6 @@ export const schemas = {
     key: Joi.string().required(),
   }),
 
-  // ─ Sale ─────────────────────────────────────────────────────
   sale: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -52,7 +48,6 @@ export const schemas = {
     colored: bool(),
   }),
 
-  // ─ Bounced Check ────────────────────────────────────────────
   bouncedCheck: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -68,7 +63,6 @@ export const schemas = {
     totalAmount: numOpt().min(0),
   }),
 
-  // ─ Worker Expense ───────────────────────────────────────────
   workerExpense: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -80,7 +74,6 @@ export const schemas = {
     colored: bool(),
   }),
 
-  // ─ Waybill ──────────────────────────────────────────────────
   waybill: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -92,7 +85,6 @@ export const schemas = {
     colored: bool(),
   }),
 
-  // ─ Partial Payment ──────────────────────────────────────────
   partialPayment: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -110,7 +102,6 @@ export const schemas = {
     ).optional().default([]),
   }),
 
-  // ─ Partial Payment Update ───────────────────────────────────
   partialPaymentUpdate: Joi.object({
     date: dateStr(),
     clientName: strOpt().max(120),
@@ -128,7 +119,6 @@ export const schemas = {
     ).optional().default([]),
   }),
 
-  // ─ Institution Tax ──────────────────────────────────────────
   institutionTax: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -140,7 +130,7 @@ export const schemas = {
     colored: bool(),
   }),
 
-  // ─ Sale To Company ──────────────────────────────────────────
+  // ✅ afterTax تغيّر من string إلى boolean
   saleToCompany: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -149,12 +139,11 @@ export const schemas = {
     containersNumbers: strOpt().max(100),
     sending: strOpt().max(100),
     number: numOpt().min(0),
-    afterTax: strOpt().max(20),
+    afterTax: Joi.boolean().optional().default(false),
     totalAmount: numOpt().min(0),
     colored: bool(),
   }),
 
-  // ─ Expense ──────────────────────────────────────────────────
   expense: Joi.object({
     date: dateStr(),
     name: strReq().max(200),
@@ -166,8 +155,6 @@ export const schemas = {
     colored: bool(),
   }),
 
-  // ─ Sleeves Bid ──────────────────────────────────────────────
-  // ✅ quantity يسمح بأرقام عشرية + إضافة expenses
   sleevesBid: Joi.object({
     date: dateStr(),
     clientName: strReq().max(120),
@@ -179,7 +166,6 @@ export const schemas = {
     colored: bool(),
   }),
 
-  // ─ Bid ──────────────────────────────────────────────────────
   bid: Joi.object({
     clientName: strReq().max(120),
     date: strOpt(),
@@ -191,13 +177,11 @@ export const schemas = {
     data: Joi.array().optional().default([]),
   }),
 
-  // ─ Inventory ────────────────────────────────────────────────
   inventory: Joi.object({
     name: strReq().max(150),
     number: numReq().min(0),
   }),
 
-  // ─ Provider / Contact ───────────────────────────────────────
   contact: Joi.object({
     name: strReq().max(120),
     number: strOpt().max(30),
@@ -206,21 +190,18 @@ export const schemas = {
     bankProps: strOpt().max(200),
   }),
 
-  // ─ Company ──────────────────────────────────────────────────
   company: Joi.object({
     name: strReq().max(120),
     isInstitution: bool(),
     taskDescription: strOpt().max(300),
   }),
 
-  // ─ Event ────────────────────────────────────────────────────
   event: Joi.object({
     title: strReq().max(200),
     start: Joi.date().iso().required(),
     end: Joi.date().iso().required(),
   }),
 
-  // ─ Settings ─────────────────────────────────────────────────
   settings: Joi.object({
     masValue: strOpt(),
     maamValue: strOpt(),
@@ -230,7 +211,6 @@ export const schemas = {
   }),
 };
 
-// ─── Middleware factory ─────────────────────────────────────────
 export const validate = (schema, target = "body") =>
   (req, res, next) => {
     const { error, value } = schema.validate(req[target], {
