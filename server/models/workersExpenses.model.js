@@ -9,6 +9,6 @@ const workerExpensesSchema = new Schema({
   colored: { type: Boolean, default: false },
   totalAmount: { type: Number },
   tax: { type: Boolean, default: false },
-});
+}, { timestamps: true });
 
 export const WorkerExpenses = model("WorkerExpenses", workerExpensesSchema);

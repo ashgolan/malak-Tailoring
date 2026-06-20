@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   salesApi, bouncedChecksApi, workersExpensesApi, sleevesBidsApi,
-  expensesApi, partialPaymentApi, taxValuesApi,
+  expensesApi, partialPaymentApi, salesToCompaniesApi, taxValuesApi,
 } from "../api";
-import { ShoppingCart, CheckSquare, Users, Scissors, TrendingUp, TrendingDown, Clock } from "lucide-react";
+import { ShoppingCart, CheckSquare, Users, Scissors, Building2, TrendingUp, TrendingDown, Clock, Wallet } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useTheme } from "../context/ThemeContext";
@@ -28,6 +28,11 @@ function preTaxSalesAmount(item) {
   const exp = Number(item.expenses) || 0;
   const saleVal = num - (num * disc) / 100;
   return saleVal * qty - exp;
+}
+
+// ✅ חישוב סכום לפני מע״מ עבור מכירות לחברות (number הוא תמיד לפני מע״מ)
+function preTaxSalesToCompaniesAmount(item) {
+  return Number(item.number) || 0;
 }
 
 function StatCard({ title, value, icon:Icon, color, sub, onClick }) {
@@ -77,23 +82,27 @@ export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedType, setSelectedType]   = useState("הכנסות");
 
-  const { data: salesData }   = useQuery({ queryKey:["sales"],          queryFn:()=>salesApi.getAll().then(r=>r.data) });
-  const { data: checksData }  = useQuery({ queryKey:["bouncedChecks"],  queryFn:()=>bouncedChecksApi.getAll().then(r=>r.data) });
-  const { data: workersData } = useQuery({ queryKey:["workersExpenses"],queryFn:()=>workersExpensesApi.getAll().then(r=>r.data) });
-  const { data: sleevesData } = useQuery({ queryKey:["sleevesBids"],    queryFn:()=>sleevesBidsApi.getAll().then(r=>r.data) });
-  const { data: expensesData }= useQuery({ queryKey:["expenses"],       queryFn:()=>expensesApi.getAll().then(r=>r.data) });
-  const { data: partialData } = useQuery({ queryKey:["partialPayment"], queryFn:()=>partialPaymentApi.getAll().then(r=>r.data) });
-  const { data: taxValues }   = useQuery({ queryKey:["taxValues"],      queryFn:()=>taxValuesApi.get().then(r=>r.data) });
+  const { data: salesData }            = useQuery({ queryKey:["sales"],            queryFn:()=>salesApi.getAll().then(r=>r.data) });
+  const { data: checksData }           = useQuery({ queryKey:["bouncedChecks"],    queryFn:()=>bouncedChecksApi.getAll().then(r=>r.data) });
+  const { data: workersData }          = useQuery({ queryKey:["workersExpenses"],  queryFn:()=>workersExpensesApi.getAll().then(r=>r.data) });
+  const { data: sleevesData }          = useQuery({ queryKey:["sleevesBids"],      queryFn:()=>sleevesBidsApi.getAll().then(r=>r.data) });
+  const { data: expensesData }         = useQuery({ queryKey:["expenses"],         queryFn:()=>expensesApi.getAll().then(r=>r.data) });
+  const { data: partialData }          = useQuery({ queryKey:["partialPayment"],   queryFn:()=>partialPaymentApi.getAll().then(r=>r.data) });
+  const { data: salesToCompaniesData } = useQuery({ queryKey:["salesToCompanies"], queryFn:()=>salesToCompaniesApi.getAll().then(r=>r.data) });
+  const { data: taxValues }            = useQuery({ queryKey:["taxValues"],        queryFn:()=>taxValuesApi.get().then(r=>r.data) });
 
-  const sales    = useMemo(()=>filterYear(salesData),   [salesData]);
-  const checks   = useMemo(()=>filterYear(checksData),  [checksData]);
-  const workers  = useMemo(()=>filterYear(workersData), [workersData]);
-  const sleeves  = useMemo(()=>filterYear(sleevesData), [sleevesData]);
-  const expenses = useMemo(()=>filterYear(expensesData),[expensesData]);
-  const partial  = useMemo(()=>filterYear(partialData), [partialData]);
+  const sales             = useMemo(()=>filterYear(salesData),            [salesData]);
+  const checks            = useMemo(()=>filterYear(checksData),           [checksData]);
+  const workers           = useMemo(()=>filterYear(workersData),          [workersData]);
+  const sleeves           = useMemo(()=>filterYear(sleevesData),          [sleevesData]);
+  const expenses          = useMemo(()=>filterYear(expensesData),         [expensesData]);
+  const partial           = useMemo(()=>filterYear(partialData),          [partialData]);
+  const salesToCompanies  = useMemo(()=>filterYear(salesToCompaniesData), [salesToCompaniesData]);
 
   // ✅ totalSales = סכום כל המכירות לפני מע״מ
   const totalSales    = useMemo(()=>sales.reduce((s,i)=>s+preTaxSalesAmount(i),0),[sales]);
+  // ✅ totalSalesToCompanies = סכום כל המכירות לחברות לפני מע״מ (שדה number)
+  const totalSalesToCompanies = useMemo(()=>salesToCompanies.reduce((s,i)=>s+preTaxSalesToCompaniesAmount(i),0),[salesToCompanies]);
   // ✅ totalExpenses = סכום לפני מע״מ (שדה number)
   const totalExpenses = useMemo(()=>expenses.reduce((s,i)=>s+(Number(i.number)||0),0),[expenses]);
   const totalWorkers  = useMemo(()=>workers.reduce((s,i)=>s+(i.totalAmount||0),0),[workers]);
@@ -108,27 +117,49 @@ export default function DashboardPage() {
     const paid=(i.payments||[]).reduce((ps,p)=>ps+Number(p.amount||0),0)+((i.payments||[]).length===0?Number(i.advanceAmount||0):0);
     return s+(Number(i.totalAmount||0)-paid);
   },0),[openPartial]);
-  const profit = totalSales - totalExpenses - totalWorkers;
+  // ✅ profit כולל כעת גם את המכירות לחברות (לפני מע״מ)
+  const profit = totalSales + totalSalesToCompanies - totalExpenses - totalWorkers;
 
   const monthlyData = useMemo(()=>MONTHS_SHORT.map((m,i)=>({
     month:m,
-    "מכירות": sales.filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+preTaxSalesAmount(s),0),
+    "מכירות": sales.filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+preTaxSalesAmount(s),0)
+            + salesToCompanies.filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+preTaxSalesToCompaniesAmount(s),0),
     "הוצאות": [...expenses,...workers].filter(s=>new Date(s.date).getMonth()===i).reduce((a,s)=>a+(s.totalAmount||0),0),
-  })),[sales,expenses,workers]);
+  })),[sales,salesToCompanies,expenses,workers]);
 
   const monthDetails = useMemo(()=>{
     const inMonth=(arr)=>arr.filter(i=>new Date(i.date).getMonth()===selectedMonth);
     if(selectedType==="הכנסות"||selectedType==="הכל"){
+      const salesItems = inMonth(sales).map(i=>({label:i.clientName||"-",value:preTaxSalesAmount(i),type:"מכירה"}));
+      const companiesItems = inMonth(salesToCompanies).map(i=>({label:i.clientName||"-",value:preTaxSalesToCompaniesAmount(i),type:"מכירה לחברה"}));
       return {
-        items: inMonth(sales).map(i=>({label:i.clientName||"-",value:preTaxSalesAmount(i),type:"מכירה"})),
-        total: inMonth(sales).reduce((s,i)=>s+preTaxSalesAmount(i),0),
+        items: [...salesItems, ...companiesItems],
+        total: inMonth(sales).reduce((s,i)=>s+preTaxSalesAmount(i),0)
+             + inMonth(salesToCompanies).reduce((s,i)=>s+preTaxSalesToCompaniesAmount(i),0),
       };
     }
     return {
       items:[...inMonth(expenses),...inMonth(workers)].map(i=>({label:i.name||i.clientName||"-",value:i.totalAmount||0,type:"הוצאה"})),
       total:[...inMonth(expenses),...inMonth(workers)].reduce((s,i)=>s+(i.totalAmount||0),0),
     };
-  },[sales,expenses,workers,selectedMonth,selectedType]);
+  },[sales,salesToCompanies,expenses,workers,selectedMonth,selectedType]);
+
+  // ✅ תנועות אחרונות — איחוד כל הסוגים, ממוין לפי תאריך יורד, 15 האחרונים
+  const recentActivity = useMemo(() => {
+    const items = [
+      ...(salesData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.clientName||i.name||"-", sub:i.name||"מכירה", amount:preTaxSalesAmount(i), icon:ShoppingCart, color:theme.primary, kind:"מכירה", path:"/sales" })),
+      ...(salesToCompaniesData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.clientName||"-", sub:i.name||"מכירה לחברה", amount:preTaxSalesToCompaniesAmount(i), icon:Building2, color:"#0ea5e9", kind:"מכירה לחברה", path:"/sales-to-companies" })),
+      ...(expensesData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.name||"-", sub:"הוצאה", amount:Number(i.number)||0, icon:TrendingDown, color:"#f97316", kind:"הוצאה", path:"/expenses" })),
+      ...(workersData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.clientName||i.equipment||"-", sub:"הוצאת עובד", amount:Number(i.totalAmount)||0, icon:Users, color:"#3b82f6", kind:"הוצאת עובד", path:"/workers-expenses" })),
+      ...(sleevesData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.clientName||"-", sub:"שרוולים", amount:(Number(i.number||0)*Number(i.quantity||1)-Number(i.expenses||0)), icon:Scissors, color:"#c9a84c", kind:"שרוולים", path:"/sleeves-bids" })),
+      ...(checksData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.clientName||"-", sub:`שיק ${i.checkNumber||""}`.trim(), amount:Number(i.number)||0, icon:CheckSquare, color:"#ef4444", kind:"שיק דחוי", path:"/bounced-checks" })),
+      ...(partialData||[]).map(i => ({ id:i._id, date:i.date, createdAt:i.createdAt, label:i.clientName||"-", sub:"תשלום חלקי", amount:Number(i.totalAmount)||0, icon:Wallet, color:"#6366f1", kind:"תשלום חלקי", path:"/partial-payment" })),
+    ];
+    return items
+      .filter(i => i.date)
+      .sort((a,b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+      .slice(0, 15);
+  }, [salesData, salesToCompaniesData, expensesData, workersData, sleevesData, checksData, partialData, theme.primary]);
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20,direction:"rtl"}}>
@@ -148,12 +179,13 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <Section title="סיכום שנתי">
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <StatCard title="סה״כ מכירות"   value={fmt(totalSales)}         icon={ShoppingCart} color={theme.primary}  sub={`${sales.length} עסקאות`}     onClick={()=>navigate("/sales")}/>
-          <StatCard title="שיקים פתוחים"  value={openChecks}              icon={CheckSquare}  color="#ef4444"        sub="טעון טיפול"                    onClick={()=>navigate("/bounced-checks")}/>
-          <StatCard title="הוצאות עובדים" value={fmt(totalWorkers)}        icon={Users}        color="#3b82f6"        sub={`${workers.length} רשומות`}    onClick={()=>navigate("/workers-expenses")}/>
-          <StatCard title="שרוולים"        value={fmt(totalSleeves)}        icon={Scissors}     color="#c9a84c"        sub={`${sleeves.length} רשומות`}    onClick={()=>navigate("/sleeves-bids")}/>
-          <StatCard title="הוצאות כלליות" value={fmt(totalExpenses)}       icon={TrendingDown} color="#f97316"        sub={`${expenses.length} הוצאות`}   onClick={()=>navigate("/expenses")}/>
-          <StatCard title="חוב ממתין"      value={fmt(totalPartialPending)} icon={Clock}        color="#6366f1"        sub={`${openPartial.length} פתוחים`} onClick={()=>navigate("/partial-payment")}/>
+          <StatCard title="סה״כ מכירות"        value={fmt(totalSales)}            icon={ShoppingCart} color={theme.primary}  sub={`${sales.length} עסקאות`}            onClick={()=>navigate("/sales")}/>
+          <StatCard title="מכירות לחברות"      value={fmt(totalSalesToCompanies)} icon={Building2}    color="#0ea5e9"        sub={`${salesToCompanies.length} רשומות`} onClick={()=>navigate("/sales-to-companies")}/>
+          <StatCard title="שיקים פתוחים"       value={openChecks}                 icon={CheckSquare}  color="#ef4444"        sub="טעון טיפול"                          onClick={()=>navigate("/bounced-checks")}/>
+          <StatCard title="הוצאות עובדים"      value={fmt(totalWorkers)}          icon={Users}        color="#3b82f6"        sub={`${workers.length} רשומות`}          onClick={()=>navigate("/workers-expenses")}/>
+          <StatCard title="שרוולים"             value={fmt(totalSleeves)}          icon={Scissors}     color="#c9a84c"        sub={`${sleeves.length} רשומות`}          onClick={()=>navigate("/sleeves-bids")}/>
+          <StatCard title="הוצאות כלליות"      value={fmt(totalExpenses)}         icon={TrendingDown} color="#f97316"        sub={`${expenses.length} הוצאות`}         onClick={()=>navigate("/expenses")}/>
+          <StatCard title="חוב ממתין"           value={fmt(totalPartialPending)}   icon={Clock}        color="#6366f1"        sub={`${openPartial.length} פתוחים`}      onClick={()=>navigate("/partial-payment")}/>
         </div>
         <div style={{marginTop:10,borderRadius:14,padding:"14px 18px",
           background:profit>=0?"linear-gradient(135deg,#059669,#10b981)":"linear-gradient(135deg,#dc2626,#ef4444)",
@@ -217,6 +249,38 @@ export default function DashboardPage() {
                 </div>
               ))}
               {monthDetails.items.length>20&&<div style={{textAlign:"center",fontSize:12,color:"var(--text-4)"}}>+{monthDetails.items.length-20} נוספים</div>}
+            </div>
+          )}
+        </Card>
+      </Section>
+
+      {/* Recent Activity */}
+      <Section title="תנועות אחרונות">
+        <Card>
+          {recentActivity.length===0?(
+            <div style={{textAlign:"center",padding:"24px 0",color:"var(--text-4)",fontSize:13}}>אין תנועות להצגה</div>
+          ):(
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {recentActivity.map((item,i)=>{
+                const Icon = item.icon;
+                return (
+                  <div key={`${item.kind}-${item.id||i}`} onClick={()=>navigate(item.path)}
+                    style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:"8px 10px",borderRadius:8,background:"var(--bg-card-alt)",border:"1px solid var(--border-light)",cursor:"pointer",transition:"background 0.15s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.background="var(--bg-hover)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.background="var(--bg-card-alt)";}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,minWidth:0}}>
+                      <div style={{width:30,height:30,borderRadius:9,background:item.color,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        <Icon size={14} color="#fff"/>
+                      </div>
+                      <div style={{minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:600,color:"var(--text-1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:180}}>{item.label}</div>
+                        <div style={{fontSize:11,color:"var(--text-4)"}}>{item.sub} · {item.date}</div>
+                      </div>
+                    </div>
+                    <span style={{fontSize:13,fontWeight:700,color:item.color,flexShrink:0}}>{fmt(item.amount)} ₪</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>

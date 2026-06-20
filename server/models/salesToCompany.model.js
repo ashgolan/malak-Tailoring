@@ -8,9 +8,9 @@ const saleToCompanySchema = new Schema({
   containersNumbers: { type: String },
   sending: { type: String },
   number: { type: Number, required: true },
-  afterTax: { type: String, required: true },
+  afterTax: { type: Boolean, default: false },
   totalAmount: { type: Number, default: 0 },
   colored: { type: Boolean, default: false },
-});
+}, { timestamps: true });
 
 export const SaleToCompany = model("SaleToCompany", saleToCompanySchema);

@@ -18,6 +18,6 @@ const partialPaymentSchema = new Schema({
     ],
     default: [],
   },
-});
+}, { timestamps: true });
 
 export const PartialPayment = model("PartialPayment", partialPaymentSchema);
