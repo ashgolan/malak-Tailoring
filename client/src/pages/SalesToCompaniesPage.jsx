@@ -130,7 +130,7 @@ export default function SalesToCompaniesPage() {
     return true;
   }).sort((a, b) => a.date < b.date ? 1 : -1);
 
-  const total = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
+  const total        = filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
   const totalPreTax  = filtered.reduce((s, i) => s + (Number(i.number) || 0), 0);
   const totalTaxOnly = filtered.reduce((s, i) => s + (i.afterTax ? (Number(i.totalAmount) || 0) - (Number(i.number) || 0) : 0), 0);
   const countWithTax = filtered.filter(i => i.afterTax).length;
@@ -158,15 +158,29 @@ export default function SalesToCompaniesPage() {
     }
   };
 
+  // ✅ פתיחת מודאל הוספה — מאפס editId כדי שלא "ייגנב" עריכה פתוחה מהטבלה
+  const openAddModal = () => {
+    setEditId(null);
+    setEditVals({});
+    setForm(EMPTY);
+    setModal(true);
+  };
+
+  const closeModal = () => {
+    setModal(false);
+    setForm(EMPTY);
+    setEditId(null);
+    setEditVals({});
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    // ✅ totalAmount מחושב מחדש מ-number/afterTax הנוכחיים בזמן השמירה (מונע אי-התאמה אם maam השתנה)
     if (editId) {
-      const totalAmount = calcTotal(editVals.number, editVals.afterTax);
-      update(editId, { ...editVals, totalAmount });
+      update(editId, { ...editVals, totalAmount: calcTotal(editVals.number, editVals.afterTax) });
       setEditId(null);
     } else {
-      const totalAmount = calcTotal(form.number, form.afterTax);
-      create({ ...form, totalAmount });
+      create({ ...form, totalAmount: calcTotal(form.number, form.afterTax) });
     }
     setModal(false);
     setForm(EMPTY);
@@ -193,7 +207,7 @@ export default function SalesToCompaniesPage() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button style={S.toggleBtn(showAll, theme)} onClick={() => setShowAll(!showAll)}>{showAll ? "שנה נוכחית" : "כל הזמנים"}</button>
-          <button onClick={() => setModal(true)} style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ הוסף</button>
+          <button onClick={openAddModal} style={{ padding: "9px 18px", borderRadius: 8, background: theme.gradient, color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ הוסף</button>
         </div>
       </div>
 
@@ -230,7 +244,15 @@ export default function SalesToCompaniesPage() {
       <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי חברה, עבודה, מכולה..." style={S.inputLg} onFocus={e => fo(e, theme.accent)} onBlur={bl} />
 
       {isMobile ? (
-        <MobileCards data={filtered} cols={mobileCols} onEdit={(item) => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }} onDelete={(item) => { if (window.confirm("למחוק?")) remove(item._id); }} onToggleColor={(item) => toggleColor(item._id, { colored: !item.colored })} theme={theme} />
+        <MobileCards
+          items={filtered}
+          columns={mobileCols}
+          onEdit={(item) => { setEditId(item._id); setEditVals({ ...item }); setModal(true); }}
+          onDelete={(id) => remove(id)}
+          onToggleColor={(id, data) => toggleColor(id, data)}
+          total={total}
+          theme={theme}
+        />
       ) : (
         <div style={{ background: "var(--bg-card)", borderRadius: 16, border: "1px solid var(--border-light)", overflow: "hidden", boxShadow: "var(--shadow-card)" }}>
           {/* Header row */}
@@ -321,7 +343,7 @@ export default function SalesToCompaniesPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Modal isOpen={modal} onClose={() => { setModal(false); setForm(EMPTY); setEditId(null); }} title={editId ? "עריכת רשומה" : "הוספת רשומה חדשה"} size="md">
+      <Modal isOpen={modal} onClose={closeModal} title={editId ? "עריכת רשומה" : "הוספת רשומה חדשה"} size="md">
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
@@ -395,7 +417,7 @@ export default function SalesToCompaniesPage() {
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
-            <button type="button" onClick={() => { setModal(false); setForm(EMPTY); setEditId(null); }} style={S.btnCancel}>ביטול</button>
+            <button type="button" onClick={closeModal} style={S.btnCancel}>ביטול</button>
             <button type="submit" style={S.btnSubmit(theme)}>שמור</button>
           </div>
         </form>
