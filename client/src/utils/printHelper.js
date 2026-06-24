@@ -44,7 +44,7 @@ export function getFooterHtml(settings) {
 // ─── printViaIframe ───────────────────────────────────────────
 /**
  * يطبع HTML عبر iframe مخفي — لا يفتح tab جديد
- * @param {string} title  - عنوان نافذة الطباعة
+ * @param {string} title  - عنوان نافذة الطباعة / اسم ملف PDF
  * @param {string} html   - محتوى HTML الكامل بما فيه <html><head>...</html>
  */
 export function printViaIframe(title, html) {
@@ -64,6 +64,9 @@ export function printViaIframe(title, html) {
   // نعطي وقتاً للصور لتحميل (خاصة اللوغو)
   iframe.onload = () => {
     setTimeout(() => {
+      // ✅ تعيين document.title داخل الـ iframe مباشرة — Chrome يستخدمه كاسم ملف PDF
+      iframe.contentDocument.title = title;
+      iframe.contentWindow.document.title = title;
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
     }, 300);

@@ -78,7 +78,7 @@ function printBid(bid, settings, maam) {
   const html = `<html dir="rtl">
   <head>
     <meta charset="UTF-8"/>
-    <title>הצעת מחיר - ${bid.clientName}</title>
+    <title>${bid.target && bid.target !== "-" ? `${bid.clientName} - ${bid.target} - ${bid.date}` : `${bid.clientName} - ${bid.date}`}</title>
     <style>
       * { font-family: Arial, sans-serif; box-sizing: border-box; direction: rtl; }
       body { margin: 0; padding: 28px; color: #1f2937; }
@@ -117,7 +117,10 @@ function printBid(bid, settings, maam) {
   </body>
   </html>`;
 
-  printViaIframe(`הצעת מחיר - ${bid.clientName}`, html);
+  const fileTitle = bid.target && bid.target !== "-"
+    ? `${bid.clientName} - ${bid.target} - ${bid.date}`
+    : `${bid.clientName} - ${bid.date}`;
+  printViaIframe(fileTitle, html);
 }
 
 
