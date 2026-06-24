@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   salesApi, bouncedChecksApi, workersExpensesApi, sleevesBidsApi,
   expensesApi, partialPaymentApi, salesToCompaniesApi, institutionTaxApi,
-  waybillsApi, settingsApi,
+  waybillsApi, settingsApi, taxValuesApi,
 } from "../api";
 import { useTheme } from "../context/ThemeContext";
 import { useStyles } from "../hooks/useStyles";
@@ -182,6 +182,13 @@ export default function ChartsPage() {
     staleTime: Infinity,
   });
 
+  const { data: taxValues } = useQuery({
+    queryKey: ["taxValues"],
+    queryFn: () => taxValuesApi.get().then(r => r.data),
+    staleTime: Infinity,
+  });
+  const maam = Number(taxValues?.maamValue || 18);
+
   const filtered = useMemo(() => {
     let result = [...(rawData || [])].filter(item => {
       if (!item.date) return false;
@@ -201,9 +208,8 @@ export default function ChartsPage() {
     : null;
 
   // ✅ للمكيعات لشركات: مجموع سה״כ (כולל מע״מ) أيضاً
-  const totalWithTax = selectedReport === "salesToCompanies"
-    ? filtered.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0)
-    : null;
+  // ✅ סה״כ כולל מע״מ — חל על כל הדוחות שיש להם totalField
+  const totalWithTax = total !== null ? Math.round(total * (1 + maam / 100)) : null;
 
   const allClients = [...new Set((rawData || []).map(i => i.clientName).filter(Boolean))].sort();
 
@@ -239,6 +245,7 @@ export default function ChartsPage() {
       ${filterClient ? ` | לקוח: ${filterClient}` : ""}
        | ${filtered.length} רשומות
       ${total !== null ? ` | סה״כ לפני מע״מ: ${fmt(total)} ₪` : ""}
+      ${total !== null ? ` | מע״מ (${maam}%): ${fmt(total * maam / 100)} ₪` : ""}
       ${totalWithTax !== null ? ` | סה״כ כולל מע״מ: ${fmt(totalWithTax)} ₪` : ""}
     </div>
     ${printRef.current.innerHTML}
@@ -312,11 +319,10 @@ export default function ChartsPage() {
           { label: "תקופה",  value: `${MONTHS_HE[Number(filterMonth) - 1] || "כל השנה"} ${filterYear}`, color: "var(--text-3)" },
           { label: "רשומות", value: filtered.length,                                                    color: theme.primary },
           // ✅ למכירות לחברות — מראה גם לפני מע״מ וגם כולל מע״מ
-          ...(total !== null && totalWithTax !== null ? [
-            { label: "סה״כ לפני מע״מ", value: `${fmt(total)} ₪`,        color: theme.primary },
-            { label: "סה״כ כולל מע״מ", value: `${fmt(totalWithTax)} ₪`, color: "#d97706"     },
-          ] : total !== null ? [
-            { label: "סה״כ לפני מע״מ", value: `${fmt(total)} ₪`, color: theme.primary },
+          ...(total !== null ? [
+            { label: 'סה״כ לפני מע״מ',  value: `${fmt(total)} ₪`,                    color: theme.primary },
+            { label: `מע״מ (${maam}%)`,  value: `${fmt(total * maam / 100)} ₪`,       color: "#d97706"     },
+            { label: 'סה״כ כולל מע״מ',  value: `${fmt(totalWithTax)} ₪`,             color: theme.primary },
           ] : []),
         ].map((stat, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
@@ -369,10 +375,7 @@ export default function ChartsPage() {
                   {report.cols.slice(1, -1).map(col => <td key={col.key} />)}
                   <td style={{ padding: "12px 12px", textAlign: "right", fontSize: 15, color: theme.primary }}>
                     {/* ✅ למכירות לחברות — עמודת סה״כ האחרונה = totalAmount (כולל מע״מ) */}
-                    {selectedReport === "salesToCompanies"
-                      ? `${fmt(totalWithTax)} ₪`
-                      : `${fmt(total)} ₪`
-                    }
+                    {fmt(totalWithTax)} ₪
                   </td>
                 </tr>
               </tfoot>
